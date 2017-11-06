@@ -6,6 +6,9 @@ uk.co.strangeskies.collection.stream
 uk.co.strangeskies.collection.tuple
 uk.co.strangeskies.configadmin.persistence
 uk.co.strangeskies.eclipse
+uk.co.strangeskies.expression
+uk.co.strangeskies.expression.buffer
+uk.co.strangeskies.expression.collection
 uk.co.strangeskies.flowcontrol
 uk.co.strangeskies.function
 uk.co.strangeskies.fx
@@ -13,9 +16,6 @@ uk.co.strangeskies.jetty.logger
 uk.co.strangeskies.log
 uk.co.strangeskies.log.provider
 uk.co.strangeskies.mathematics
-uk.co.strangeskies.mathematics.expression
-uk.co.strangeskies.mathematics.expression.buffer
-uk.co.strangeskies.mathematics.expression.collection
 uk.co.strangeskies.mathematics.geometry
 uk.co.strangeskies.mathematics.geometry.matrix
 uk.co.strangeskies.mathematics.geometry.matrix.building
@@ -33,7 +33,6 @@ uk.co.strangeskies.osgi
 uk.co.strangeskies.reflection
 uk.co.strangeskies.reflection.classloading
 uk.co.strangeskies.reflection.codegen
-uk.co.strangeskies.reflection.codegen.block
 uk.co.strangeskies.reflection.resource
 uk.co.strangeskies.reflection.token
 uk.co.strangeskies.text
