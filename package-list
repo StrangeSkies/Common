@@ -30,6 +30,7 @@ uk.co.strangeskies.mathematics.operation
 uk.co.strangeskies.mathematics.values
 uk.co.strangeskies.observable
 uk.co.strangeskies.osgi
+uk.co.strangeskies.property
 uk.co.strangeskies.reflection
 uk.co.strangeskies.reflection.classloading
 uk.co.strangeskies.reflection.codegen
