@@ -37,6 +37,7 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.zip;
+import static uk.co.strangeskies.reflection.AnnotatedTypes.annotated;
 import static uk.co.strangeskies.reflection.ArrayTypes.arrayFromComponent;
 import static uk.co.strangeskies.reflection.BoundSet.emptyBoundSet;
 import static uk.co.strangeskies.reflection.IntersectionTypes.intersectionOf;
@@ -197,10 +198,7 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
   @Target(ElementType.TYPE_USE)
   public @interface Capture {}
 
-  private static final TypeToken<?> NULL_TYPE_TOKEN = new TypeToken<>(
-      emptyBoundSet(),
-      (AnnotatedType) null,
-      (Type) null);
+  private static final TypeToken<?> NULL_TYPE_TOKEN = new TypeToken<>(emptyBoundSet(), (Type) null);
 
   private final BoundSet bounds;
   private final Type type;
@@ -245,14 +243,8 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
     this(bounds, AnnotatedTypes.annotated(type, wildcards.getAnnotation()));
   }
 
-  protected TypeToken(BoundSet bounds, AnnotatedType declaration, Type type) {
-    this.declaration = declaration;
-    this.bounds = bounds;
-    this.type = type;
-  }
-
   protected TypeToken(BoundSet bounds, Type type) {
-    this.declaration = AnnotatedTypes.annotated(type);
+    this.declaration = null;
     this.bounds = bounds;
     this.type = type;
   }
@@ -575,7 +567,6 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
   public TypeToken<T> deepCopy(Isomorphism isomorphism) {
     return new TypeToken<>(
         bounds.deepCopy(isomorphism),
-        declaration,
         new TypeSubstitution().withIsomorphism(isomorphism).resolve(getType()));
   }
 
@@ -635,7 +626,7 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
    * @return a string representing the type described by this type token
    */
   public String toString(Imports imports) {
-    return AnnotatedTypes.toString(declaration, imports);
+    return AnnotatedTypes.toString(getAnnotatedDeclaration(), imports);
   }
 
   /**
@@ -1140,7 +1131,7 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
    *         an unannotated representation of the type of this type token.
    */
   public AnnotatedType getAnnotatedDeclaration() {
-    return declaration;
+    return declaration != null ? declaration : annotated(getType());
   }
 
   /**
@@ -1242,9 +1233,11 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
    *         in {@link ExecutableToken} instances
    */
   public Stream<ExecutableToken<T, ?>> methods() {
-    Stream<Method> methodStream = getErasedUpperBounds().flatMap(t -> stream(t.getMethods()));
+    List<Class<?>> upperBounds = getErasedUpperBounds().collect(toList());
 
-    if (getErasedUpperBounds().allMatch(Types::isInterface))
+    Stream<Method> methodStream = upperBounds.stream().flatMap(t -> stream(t.getMethods()));
+
+    if (upperBounds.stream().allMatch(Types::isInterface))
       methodStream = Stream.concat(methodStream, stream(Object.class.getMethods()));
 
     methodStream = methodStream.filter(m -> !Modifier.isStatic(m.getModifiers()));

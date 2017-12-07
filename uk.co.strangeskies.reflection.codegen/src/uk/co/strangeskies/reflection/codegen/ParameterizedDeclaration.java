@@ -64,7 +64,7 @@ s * Copyright (C) 2017 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
  */
 package uk.co.strangeskies.reflection.codegen;
 
-import static uk.co.strangeskies.collection.stream.StreamUtilities.throwingMerger;
+import static uk.co.strangeskies.collection.stream.StreamUtilities.throwingReduce;
 import static uk.co.strangeskies.reflection.IntersectionTypes.intersectionOf;
 import static uk.co.strangeskies.reflection.Types.getErasedType;
 
@@ -98,7 +98,7 @@ public class ParameterizedDeclaration<S extends ParameterizedSignature<?>>
 					.filter(
 							b -> b.getType() instanceof TypeVariable<?>
 									|| !getErasedType(b.getType()).isInterface())
-					.reduce(throwingMerger())
+					.reduce(throwingReduce())
 					.ifPresent(bound -> {
 						SignatureVisitor classBoundWriter = writer.visitClassBound();
 						ClassWritingContext.visitTypeSignature(classBoundWriter, bound.getType());

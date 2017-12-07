@@ -42,7 +42,7 @@ import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 import static org.objectweb.asm.Opcodes.NEW;
 import static org.objectweb.asm.Type.getInternalName;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.streamOptional;
-import static uk.co.strangeskies.collection.stream.StreamUtilities.throwingMerger;
+import static uk.co.strangeskies.collection.stream.StreamUtilities.throwingReduce;
 import static uk.co.strangeskies.reflection.codegen.CodeGenerationException.CODEGEN_PROPERTIES;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -126,7 +126,7 @@ public class ClassDefinition<E, T> extends Definition<ClassDeclaration<E, T>> {
             .flatMap(
                 m -> streamOptional(
                     methodImplementor.getImplementation(m).map(i -> new SimpleEntry<>(m, i))))
-            .reduce(throwingMerger())
+            .reduce(throwingReduce())
             .map(
                 e -> new ClassDefinition<>(
                     getDeclaration(),
@@ -148,7 +148,7 @@ public class ClassDefinition<E, T> extends Definition<ClassDeclaration<E, T>> {
                 (c, e) -> new ClassDefinition<>(
                     getDeclaration(),
                     c.classSpace.withMethodDefinition(e.getKey(), e.getValue())),
-                throwingMerger());
+                throwingReduce());
   }
 
   @Override

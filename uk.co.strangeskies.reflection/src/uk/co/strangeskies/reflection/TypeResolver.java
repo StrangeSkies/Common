@@ -40,7 +40,7 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.entriesToMap;
-import static uk.co.strangeskies.collection.stream.StreamUtilities.throwingMerger;
+import static uk.co.strangeskies.collection.stream.StreamUtilities.throwingReduce;
 import static uk.co.strangeskies.reflection.ArrayTypes.arrayFromComponent;
 import static uk.co.strangeskies.reflection.BoundSet.emptyBoundSet;
 import static uk.co.strangeskies.reflection.IntersectionTypes.uncheckedIntersectionOf;
@@ -166,7 +166,7 @@ public class TypeResolver implements DeepCopyable<TypeResolver> {
             toMap(
                 identity(),
                 v -> new InferenceVariable(v.getName()),
-                throwingMerger(),
+                throwingReduce(),
                 LinkedHashMap::new));
 
     if (!newCaptures.isEmpty()) {
@@ -180,7 +180,7 @@ public class TypeResolver implements DeepCopyable<TypeResolver> {
           (b, e) -> b.withIncorporated().subtype(
               e.getValue(),
               substitution.resolve(uncheckedIntersectionOf(e.getKey().getBounds()))),
-          throwingMerger());
+          throwingReduce());
     }
 
     return newCaptures;
