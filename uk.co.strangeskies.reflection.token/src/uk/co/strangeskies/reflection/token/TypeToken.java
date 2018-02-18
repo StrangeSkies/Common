@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
+ * Copyright (C) 2018 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
  *      __   _______  ____           _       __     _      __       __
  *    ,`_ `,|__   __||  _ `.        / \     |  \   | |  ,-`__`¬  ,-`__`¬
  *   ( (_`-'   | |   | | ) |       / . \    | . \  | | / .`  `' / .`  `'
@@ -46,6 +46,7 @@ import static uk.co.strangeskies.reflection.WildcardTypes.wildcardExtending;
 import static uk.co.strangeskies.reflection.WildcardTypes.wildcardSuper;
 import static uk.co.strangeskies.reflection.token.ExecutableToken.forConstructor;
 import static uk.co.strangeskies.reflection.token.ExecutableToken.forMethod;
+import static uk.co.strangeskies.reflection.token.FieldToken.forField;
 import static uk.co.strangeskies.reflection.token.TypeParameter.forTypeVariable;
 import static uk.co.strangeskies.reflection.token.TypeToken.Wildcards.RETAIN;
 
@@ -118,7 +119,7 @@ import uk.co.strangeskies.utility.Isomorphism;
  * @param <T>
  *          This is the type which the TypeToken object references.
  */
-public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<TypeToken<T>>,
+public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedType<TypeToken<T>>,
     DeclarationToken<TypeToken<T>> {
   /**
    * Treatment of wildcards for {@link TypeToken}s created over parameterized
@@ -269,8 +270,9 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
           type = annotatedType;
 
         resolvedParameters.clear();
-        AnnotatedParameterizedTypes.getAllTypeArguments((AnnotatedParameterizedType) type).forEach(
-            e -> resolvedParameters.put(e.getKey(), e.getValue()));
+        AnnotatedParameterizedTypes
+            .getAllTypeArguments((AnnotatedParameterizedType) type)
+            .forEach(e -> resolvedParameters.put(e.getKey(), e.getValue()));
 
         Annotation defaultAnnotation = getWildcardsAnnotation(annotatedType);
         if (defaultAnnotation != null) {
@@ -282,8 +284,9 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
 
             Annotation givenAnnotation = getWildcardsAnnotation(parameter.getValue());
             if (givenAnnotation == null) {
-              parameter.setValue(
-                  AnnotatedTypes.annotated(parameter.getValue().getType(), defaultAnnotation));
+              parameter
+                  .setValue(
+                      AnnotatedTypes.annotated(parameter.getValue().getType(), defaultAnnotation));
             }
           }
         }
@@ -413,18 +416,20 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
     WildcardType wildcardType;
 
     if (annotatedWildcardType.getAnnotatedLowerBounds().length > 0) {
-      wildcardType = WildcardTypes.wildcardSuper(
-          substituteAnnotatedWildcardsForEach(
-              isomorphism,
-              annotatedWildcardType.getAnnotatedLowerBounds(),
-              resolver));
+      wildcardType = WildcardTypes
+          .wildcardSuper(
+              substituteAnnotatedWildcardsForEach(
+                  isomorphism,
+                  annotatedWildcardType.getAnnotatedLowerBounds(),
+                  resolver));
 
     } else if (annotatedWildcardType.getAnnotatedUpperBounds().length > 0) {
-      wildcardType = WildcardTypes.wildcardExtending(
-          substituteAnnotatedWildcardsForEach(
-              isomorphism,
-              annotatedWildcardType.getAnnotatedUpperBounds(),
-              resolver));
+      wildcardType = WildcardTypes
+          .wildcardExtending(
+              substituteAnnotatedWildcardsForEach(
+                  isomorphism,
+                  annotatedWildcardType.getAnnotatedUpperBounds(),
+                  resolver));
 
     } else {
       wildcardType = WildcardTypes.wildcard();
@@ -549,7 +554,7 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
 
   @Override
   public TypeToken<T> getThis() {
-    return ReifiedToken.super.getThis();
+    return ReifiedType.super.getThis();
   }
 
   @Override
@@ -753,8 +758,10 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
         upperBounds.remove(upperBound);
 
         InferenceVariableBounds bounds = getBounds().getBoundsOn((InferenceVariable) upperBound);
-        bounds.getUpperBounds().filter(t -> !getBounds().containsInferenceVariable(t)).forEach(
-            upperBounds::add);
+        bounds
+            .getUpperBounds()
+            .filter(t -> !getBounds().containsInferenceVariable(t))
+            .forEach(upperBounds::add);
       }
     }
 
@@ -1190,7 +1197,16 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
    *         in {@link FieldToken} instances
    */
   public Stream<FieldToken<T, ?>> fields() {
-    return stream(getErasedType().getFields()).map(f -> FieldToken.overField(f, this));
+    TypeHierarchy typeHierarchy = new TypeHierarchy(getType());
+
+    return stream(getErasedType().getFields())
+        .filter(f -> !Modifier.isStatic(f.getModifiers()))
+        .map(
+            f -> forField(f)
+                .withReceiverType(
+                    new TypeToken<>(
+                        getBounds(),
+                        typeHierarchy.resolveSupertype(f.getDeclaringClass()))));
   }
 
   /**
@@ -1200,7 +1216,9 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
    *         in {@link FieldToken} instances
    */
   public Stream<FieldToken<T, ?>> declaredFields() {
-    return stream(getErasedType().getDeclaredFields()).map(f -> FieldToken.overField(f, this));
+    return stream(getErasedType().getDeclaredFields())
+        .filter(f -> !Modifier.isStatic(f.getModifiers()))
+        .map(f -> forField(f).withReceiverType(this));
   }
 
   /**
@@ -1240,13 +1258,16 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
     if (upperBounds.stream().allMatch(Types::isInterface))
       methodStream = Stream.concat(methodStream, stream(Object.class.getMethods()));
 
-    methodStream = methodStream.filter(m -> !Modifier.isStatic(m.getModifiers()));
-
     TypeHierarchy typeHierarchy = new TypeHierarchy(getType());
 
-    return methodStream.map(
-        m -> forMethod(m).withReceiverType(
-            new TypeToken<>(getBounds(), typeHierarchy.resolveSupertype(m.getDeclaringClass()))));
+    return methodStream
+        .filter(m -> !Modifier.isStatic(m.getModifiers()))
+        .map(
+            m -> forMethod(m)
+                .withReceiverType(
+                    new TypeToken<>(
+                        getBounds(),
+                        typeHierarchy.resolveSupertype(m.getDeclaringClass()))));
   }
 
   /**
@@ -1312,8 +1333,9 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
         .map(TypeToken::getBounds)
         .reduce(getBounds(), (a, b) -> a.withBounds(b));
 
-    Map<TypeVariable<?>, Type> argumentMap = arguments.stream().collect(
-        toMap(a -> a.getParameter().getType(), TypeArgument::getType));
+    Map<TypeVariable<?>, Type> argumentMap = arguments
+        .stream()
+        .collect(toMap(a -> a.getParameter().getType(), TypeArgument::getType));
 
     return new TypeToken<>(bounds, new TypeSubstitution(argumentMap).resolve(getType()));
   }
@@ -1355,11 +1377,12 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedToken<Ty
 
       if (enclosingDeclaration instanceof Class<?>) {
         Class<?> enclosingClass = (Class<?>) enclosingDeclaration;
-        return Optional.of(
-            forType(
-                Types.isGeneric(enclosingClass)
-                    ? ParameterizedTypes.parameterize(enclosingClass)
-                    : enclosingClass));
+        return Optional
+            .of(
+                forType(
+                    Types.isGeneric(enclosingClass)
+                        ? ParameterizedTypes.parameterize(enclosingClass)
+                        : enclosingClass));
 
       } else if (enclosingDeclaration instanceof Method) {
         return Optional.of(ExecutableToken.forMethod((Method) enclosingDeclaration));

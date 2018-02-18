@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
+ * Copyright (C) 2018 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
  *      __   _______  ____           _       __     _      __       __
  *    ,`_ `,|__   __||  _ `.        / \     |  \   | |  ,-`__`¬  ,-`__`¬
  *   ( (_`-'   | |   | | ) |       / . \    | . \  | | / .`  `' / .`  `'
@@ -178,7 +178,7 @@ public interface MemberToken<T, S extends MemberToken<T, S>> extends Declaration
 	 * As @see {@link #withReceiverType(TypeToken)}.
 	 */
 	@SuppressWarnings("javadoc")
-	MemberToken<?, ?> withReceiverType(Type type);
+  MemberToken<?, ?> withReceiverType(Type type);
 
 	/**
 	 * Derived a new {@link MemberToken} instance with all associated generic

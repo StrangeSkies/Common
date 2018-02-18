@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
+ * Copyright (C) 2018 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
  *      __   _______  ____           _       __     _      __       __
  *    ,`_ `,|__   __||  _ `.        / \     |  \   | |  ,-`__`¬  ,-`__`¬
  *   ( (_`-'   | |   | | ) |       / . \    | . \  | | / .`  `' / .`  `'
@@ -50,21 +50,21 @@ import uk.co.strangeskies.utility.Self;
  * @param <S>
  *          The type of the instance
  */
-public interface ReifiedToken<S extends ReifiedToken<S>> extends Reified, Self<S> {
-	/**
-	 * @return a {@link TypeToken} over the value of {@link #getThisType()}
-	 */
-	TypeToken<S> getThisTypeToken();
+public interface ReifiedType<S extends ReifiedType<S>> extends Reified, Self<S> {
+  /**
+   * @return a {@link TypeToken} over the value of {@link #getThisType()}
+   */
+  TypeToken<S> getThisTypeToken();
 
-	@Override
-	default Type getThisType() {
-		return getThisTypeToken().getType();
-	}
+  @Override
+  default Type getThisType() {
+    return getThisTypeToken().getType();
+  }
 
-	/**
-	 * @return this object as a {@link TypedObject}
-	 */
-	default TypedObject<S> asTypedObject() {
-		return typedObject(getThisTypeToken(), getThis());
-	}
+  /**
+   * @return this object as a {@link TypedObject}
+   */
+  default TypedObject<S> asTypedObject() {
+    return typedObject(getThisTypeToken(), getThis());
+  }
 }

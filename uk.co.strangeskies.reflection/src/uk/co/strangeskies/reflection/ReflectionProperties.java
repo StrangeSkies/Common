@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
+ * Copyright (C) 2018 Elias N Vasylenko <eliasvasylenko@strangeskies.co.uk>
  *      __   _______  ____           _       __     _      __       __
  *    ,`_ `,|__   __||  _ `.        / \     |  \   | |  ,-`__`¬  ,-`__`¬
  *   ( (_`-'   | |   | | ) |       / . \    | . \  | | / .`  `' / .`  `'
@@ -33,10 +33,10 @@
 package uk.co.strangeskies.reflection;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericDeclaration;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -57,149 +57,151 @@ import uk.co.strangeskies.text.properties.PropertyConfiguration.KeyCase;
 @SuppressWarnings("javadoc")
 @PropertyConfiguration(keyCase = KeyCase.LOWER, keySplitString = ".")
 public interface ReflectionProperties {
-	String unsupportedType(Type type);
+  String unsupportedType(Type type);
 
-	String invalidAssignmentObject(Object object, Class<?> type);
+  String invalidAssignmentObject(Object object, Class<?> type);
 
-	default String invalidTypeVariableCaptureBounds(TypeVariableCapture capture) {
-		return invalidTypeVariableCaptureBounds(
-				capture,
-				capture.getLowerBounds(),
-				capture.getUpperBounds());
-	}
+  default String invalidTypeVariableCaptureBounds(TypeVariableCapture capture) {
+    return invalidTypeVariableCaptureBounds(
+        capture,
+        capture.getLowerBounds(),
+        capture.getUpperBounds());
+  }
 
-	String invalidTypeVariableCaptureBounds(
-			TypeVariableCapture capture,
-			Type[] lowerBounds,
-			Type[] upperBounds);
+  String invalidTypeVariableCaptureBounds(
+      TypeVariableCapture capture,
+      Type[] lowerBounds,
+      Type[] upperBounds);
 
-	String improperCaptureType(TypeVariableCapture capture);
+  String improperCaptureType(TypeVariableCapture capture);
 
-	String improperUpperBound(Type t, InferenceVariable inferenceVariable, BoundSet bounds);
+  String improperUpperBound(Type t, InferenceVariable inferenceVariable, BoundSet bounds);
 
-	String cannotCaptureInferenceVariable(InferenceVariable key, Type value, BoundSet bounds);
+  String cannotCaptureInferenceVariable(InferenceVariable key, Type value, BoundSet bounds);
 
-	String cannotInstantiateInferenceVariable(InferenceVariable variable, BoundSet bounds);
+  String cannotInstantiateInferenceVariable(InferenceVariable variable, BoundSet bounds);
 
-	String cannotFindSubstitution(Type i);
+  String cannotFindSubstitution(Type i);
 
-	String invalidAnnotationValue(Method method, Object propertyValue);
+  String invalidAnnotationValue(Method method, Object propertyValue);
 
-	String invalidAnnotationProperties(
-			Class<? extends Annotation> annotationClass,
-			Set<String> keySet);
+  String invalidAnnotationProperties(
+      Class<? extends Annotation> annotationClass,
+      Set<String> keySet);
 
-	String invalidAnnotationValue(
-			Class<? extends Annotation> annotationClass,
-			String name,
-			Object propertyValue);
+  String invalidAnnotationValue(
+      Class<? extends Annotation> annotationClass,
+      String name,
+      Object propertyValue);
 
-	String invalidEquality(Type first, Type second, BoundSet bounds);
+  String invalidEquality(Type first, Type second, BoundSet bounds);
 
-	String invalidSubtype(Type subtype, Type supertype, BoundSet boundSet);
+  String invalidSubtype(Type subtype, Type supertype, BoundSet boundSet);
 
-	String invalidCaptureConversion(CaptureConversion captureConversion, BoundSet boundSet);
+  String invalidCaptureConversion(CaptureConversion captureConversion, BoundSet boundSet);
 
-	String invalidBoundSet(String message, BoundSet boundSet);
+  String invalidBoundSet(String message, BoundSet boundSet);
 
-	String cannotReduceConstraint(ConstraintFormula constraintFormula, BoundSet bounds);
+  String cannotReduceConstraint(ConstraintFormula constraintFormula, BoundSet bounds);
 
-	String invalidIntersectionTypes(
-			Collection<? extends Type> flattenedTypes,
-			Type iType,
-			Type jType);
+  String invalidIntersectionTypes(
+      Collection<? extends Type> flattenedTypes,
+      Type iType,
+      Type jType);
 
-	String invalidIntersectionType(Collection<? extends Type> flattenedTypes);
+  String invalidIntersectionType(Collection<? extends Type> flattenedTypes);
 
-	String incompatibleImports(Class<?> class1, Class<?> class2);
+  String incompatibleImports(Class<?> class1, Class<?> class2);
 
-	String invalidUpperBound(WildcardType wildcardType);
+  String invalidUpperBound(WildcardType wildcardType);
 
-	String cannotCopyInferenceVariable(InferenceVariable inferenceVariable, BoundSet boundSet);
+  String cannotCopyInferenceVariable(InferenceVariable inferenceVariable, BoundSet boundSet);
 
-	String cannotFilterCapture(CaptureConversion capture);
+  String cannotFilterCapture(CaptureConversion capture);
 
-	String cannotCaptureMultipleTimes(
-			InferenceVariable inferenceVariable,
-			CaptureConversion capture,
-			CaptureConversion captureConversion);
+  String cannotCaptureMultipleTimes(
+      InferenceVariable inferenceVariable,
+      CaptureConversion capture,
+      CaptureConversion captureConversion);
 
-	String invalidStaticMethodArguments(Method method, List<?> a);
+  String invalidStaticMethodArguments(Method method, List<?> a);
 
-	String invalidCastObject(Object object, Type objectType, Type castType);
+  String invalidCastObject(Object object, Type objectType, Type castType);
 
-	String invalidVariableArityInvocation(Executable executableMember);
+  String invalidVariableArityInvocation(Executable executableMember);
 
-	String cannotResolveOverride(Executable executableMember, Type type);
+  String cannotResolveReceiver(Member executableMember, Type type);
 
-	String cannotResolveAmbiguity(Executable firstCandidate, Executable secondCandidate);
+  String cannotResolveTarget(Member executableMember, Type type);
 
-	String cannotResolveApplicable(
-			Set<? extends Executable> candidates,
-			List<? extends Type> parameters);
+  String cannotResolveAmbiguity(Executable firstCandidate, Executable secondCandidate);
 
-	String incompatibleArgument(
-			Type givenArgumentCaptured,
-			Type genericParameterCaptured,
-			int i,
-			Executable executableMember);
+  String cannotResolveApplicable(
+      Set<? extends Executable> candidates,
+      List<? extends Type> parameters);
 
-	String incompatibleArgument(
-			Object object,
-			Type objectType,
-			Type genericParameterCaptured,
-			int i,
-			Executable executableMember);
+  String incompatibleArgument(
+      Type givenArgumentCaptured,
+      Type genericParameterCaptured,
+      int i,
+      Executable executableMember);
 
-	String cannotResolveInvocationType(Executable executableMember, List<? extends Type> arguments);
+  String incompatibleArgument(
+      Object object,
+      Type objectType,
+      Type genericParameterCaptured,
+      int i,
+      Executable executableMember);
 
-	String cannotGetField(Object target, Field fieldMember);
+  String cannotResolveInvocationType(Executable executableMember, List<? extends Type> arguments);
 
-	String cannotSetField(Object target, Object value, Field fieldMember);
+  String cannotGetField(Object target, Field fieldMember);
 
-	String cannotFindMethodOn(Type type);
+  String cannotSetField(Object target, Object value, Field fieldMember);
 
-	default String incorrectTypeArgumentCount(
-			GenericDeclaration declaration,
-			List<Type> typeArguments) {
-		return incorrectTypeArgumentCount(
-				Arrays.asList(declaration.getTypeParameters()),
-				typeArguments);
-	}
+  String cannotFindMethodOn(Type type);
 
-	String incorrectTypeArgumentCount(List<TypeVariable<?>> parameters, List<Type> typeArguments);
+  default String incorrectTypeArgumentCount(
+      GenericDeclaration declaration,
+      List<Type> typeArguments) {
+    return incorrectTypeArgumentCount(
+        Arrays.asList(declaration.getTypeParameters()),
+        typeArguments);
+  }
 
-	String duplicateTypeVariable(String n);
+  String incorrectTypeArgumentCount(List<TypeVariable<?>> parameters, List<Type> typeArguments);
 
-	String cannotResolveSupertype(Type type, Class<?> superclass);
+  String duplicateTypeVariable(String n);
 
-	String incorrectEnclosingDeclaration(Type rawType, GenericDeclaration declaration);
+  String cannotResolveSupertype(Type type, Class<?> superclass);
 
-	String cannotResolveInvocationOnTypeWithWildcardParameters(Type type);
+  String incorrectEnclosingDeclaration(Type rawType, GenericDeclaration declaration);
 
-	String cannotParameterizeMethodOnRawType(Executable executable);
+  String cannotResolveInvocationOnTypeWithWildcardParameters(Type type);
 
-	String cannotResolveTypeVariable(TypeVariable<?> parameter, Object object);
+  String cannotParameterizeMethodOnRawType(Executable executable);
 
-	String methodMustBeStatic(Method method);
+  String cannotResolveTypeVariable(TypeVariable<?> parameter, Object object);
 
-	String declaringClassMustBeStatic(Constructor<?> constructor);
+  String memberMustBeStatic(Member member);
 
-	String invocationFailed(Executable executable, Type instance, Object[] arguments);
+  String declaringClassMustBeStatic(Member member);
 
-	String cannotParameterizeEnclosingExecutable(Class<?> enclosedClass);
+  String invocationFailed(Executable executable, Type instance, Object[] arguments);
 
-	String noEnclosingDeclaration(Type type);
+  String cannotParameterizeEnclosingExecutable(Class<?> enclosedClass);
 
-	String cannotParameterizeWithReplacement(Type type, Type currentType);
+  String noEnclosingDeclaration(Type type);
 
-	/*
-	 * The given type variable cannot be found in the context of the given
-	 * declaration and so cannot be parameterized.
-	 */
-	String cannotParameterizeOnDeclaration(TypeVariable<?> type, GenericDeclaration declaration);
+  String cannotParameterizeWithReplacement(Type type, Type currentType);
 
-	String cannotOverrideConstructor(Executable member, Type type);
+  /*
+   * The given type variable cannot be found in the context of the given
+   * declaration and so cannot be parameterized.
+   */
+  String cannotParameterizeOnDeclaration(TypeVariable<?> type, GenericDeclaration declaration);
 
-	String cannotParameterizeInference();
+  String cannotOverrideConstructor(Executable member, Type type);
+
+  String cannotParameterizeInference();
 }
