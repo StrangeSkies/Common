@@ -47,61 +47,75 @@ import java.util.function.Supplier;
  *          {@link Parser} to a piece of text
  */
 public interface AbstractParser<T> extends Parser<T> {
-	@Override
-	default <W> Parser<W> transform(Function<? super T, ? extends W> transform) {
-		return new ParserProxy<>(this, transform);
-	}
+  @Override
+  default <W> Parser<W> transform(Function<? super T, ? extends W> transform) {
+    return new ParserProxy<>(this, transform);
+  }
 
-	@Override
-	default Parser<T> orElse(Supplier<? extends T> onFailure) {
-		return orElse(new RegexParser<>("", s -> onFailure.get()));
-	}
+  @Override
+  default Parser<T> orElse(Supplier<? extends T> onFailure) {
+    return orElse(new RegexParser<>("", s -> onFailure.get()));
+  }
 
-	@Override
-	default Parser<T> orElse(Parser<? extends T> onFailure) {
-		return new ChoiceParser<>(() -> this, onFailure, Function.identity());
-	}
+  @Override
+  default Parser<T> orElse(Parser<? extends T> onFailure) {
+    return new ChoiceParser<>(() -> this, onFailure, Function.identity());
+  }
 
-	@Override
-	default <U> Parser<U> appendTransform(String pattern, BiFunction<T, String, ? extends U> incorporate) {
-		return new JoiningParser<>(this, new RegexParser<>(pattern, Function.identity()), incorporate);
-	}
+  @Override
+  default <U> Parser<U> appendTransform(
+      String pattern,
+      BiFunction<T, String, ? extends U> incorporate) {
+    return new JoiningParser<>(this, new RegexParser<>(pattern, Function.identity()), incorporate);
+  }
 
-	@Override
-	default <U> Parser<U> prependTransform(String pattern, BiFunction<T, String, ? extends U> incorporate) {
-		return new JoiningParser<>(new RegexParser<>(pattern, Function.identity()), this,
-				(s, t) -> incorporate.apply(t, s));
-	}
+  @Override
+  default <U> Parser<U> prependTransform(
+      String pattern,
+      BiFunction<T, String, ? extends U> incorporate) {
+    return new JoiningParser<>(
+        new RegexParser<>(pattern, Function.identity()),
+        this,
+        (s, t) -> incorporate.apply(t, s));
+  }
 
-	@Override
-	default <U, V> Parser<V> appendTransform(Parser<U> parser, BiFunction<T, U, ? extends V> incorporate) {
-		return new JoiningParser<>(this, parser, incorporate);
-	}
+  @Override
+  default <U, V> Parser<V> appendTransform(
+      Parser<U> parser,
+      BiFunction<T, U, ? extends V> incorporate) {
+    return new JoiningParser<>(this, parser, incorporate);
+  }
 
-	@Override
-	default <U, V> Parser<V> prependTransform(Parser<U> parser, BiFunction<T, U, ? extends V> incorporate) {
-		return new JoiningParser<>(parser, this, (v, t) -> incorporate.apply(t, v));
-	}
+  @Override
+  default <U, V> Parser<V> prependTransform(
+      Parser<U> parser,
+      BiFunction<T, U, ? extends V> incorporate) {
+    return new JoiningParser<>(parser, this, (v, t) -> incorporate.apply(t, v));
+  }
 
-	@Override
-	default <U> Parser<T> tryAppendTransform(Parser<U> parser, BiFunction<T, U, ? extends T> incorporate) {
-		return new AppendingParser<>(this, parser, incorporate);
-	}
+  @Override
+  default <U> Parser<T> tryAppendTransform(
+      Parser<U> parser,
+      BiFunction<T, U, ? extends T> incorporate) {
+    return new AppendingParser<>(this, parser, incorporate);
+  }
 
-	@Override
-	default <U> Parser<T> tryPrependTransform(Parser<U> parser, BiFunction<T, U, ? extends T> incorporate) {
-		return new PrependingParser<>(this, parser, incorporate);
-	}
+  @Override
+  default <U> Parser<T> tryPrependTransform(
+      Parser<U> parser,
+      BiFunction<T, U, ? extends T> incorporate) {
+    return new PrependingParser<>(this, parser, incorporate);
+  }
 
-	@Override
-	default T parse(String literal) {
-		return parseSubstring(new ParseState(literal)).result();
-	}
+  @Override
+  default T parse(String literal) {
+    return parseSubstring(new ParseStateImpl(literal)).result();
+  }
 
-	@Override
-	default ParseResult<T> parseSubstring(ParseState currentState) {
-		return parseSubstringImpl(currentState.push(this)).mapState(s -> s.pop(this));
-	}
+  @Override
+  default ParseResult<T> parseSubstring(ParseState currentState) {
+    return parseSubstringImpl(currentState.push(this)).mapState(s -> s.pop(this));
+  }
 
-	ParseResult<T> parseSubstringImpl(ParseState currentState);
+  ParseResult<T> parseSubstringImpl(ParseState currentState);
 }

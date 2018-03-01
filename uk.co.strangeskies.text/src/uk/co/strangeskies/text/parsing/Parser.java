@@ -42,7 +42,7 @@ import java.util.function.Supplier;
 import uk.co.strangeskies.property.IdentityProperty;
 
 /**
- * A simple text parser, composable by way of fluid and type-safe API. This
+ * A simple text parser, composable by way of fluent and type-safe API. This
  * class is intended for fairly simple use-cases.
  * <p>
  * Usage should be intuitive enough for users familiar with context free

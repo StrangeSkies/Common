@@ -32,103 +32,32 @@
  */
 package uk.co.strangeskies.text.parsing;
 
-import java.util.LinkedList;
 import java.util.function.Function;
 
-public class ParseState {
-	private final LinkedList<Parser<?>> parserStack;
-	private final ParseException furthestException;
+public interface ParseState {
+  String literal();
 
-	private final String literal;
-	private final int fromIndex;
-	private final boolean toEnd;
+  int fromIndex();
 
-	public ParseState(String literal) {
-		this(new LinkedList<>(), literal, 0, true, null);
-	}
+  ParseState fromIndex(int fromIndex);
 
-	private ParseState(
-			LinkedList<Parser<?>> parserStack,
-			String literal,
-			int fromIndex,
-			boolean toEnd,
-			ParseException furthestException) {
-		this.parserStack = parserStack;
-		this.literal = literal;
-		this.fromIndex = fromIndex;
-		this.toEnd = toEnd;
-		this.furthestException = furthestException;
-	}
+  boolean toEnd();
 
-	public ParseState(ParseState state, ParseException furthestException) {
-		this(state.parserStack, state.literal, state.fromIndex, state.toEnd, furthestException);
-	}
+  ParseState toEnd(boolean toEnd);
 
-	public String literal() {
-		return literal;
-	}
+  <T> ParseResult<T> parseTo(int toIndex, Function<String, T> transform);
 
-	public int fromIndex() {
-		return fromIndex;
-	}
+  ParseException getException();
 
-	public ParseState fromIndex(int fromIndex) {
-		return new ParseState(parserStack, literal, fromIndex, toEnd, furthestException);
-	}
+  ParseState addException(ParseException exception);
 
-	public boolean toEnd() {
-		return toEnd;
-	}
+  ParseState addException(String message, int indexReached);
 
-	public ParseState toEnd(boolean toEnd) {
-		return new ParseState(parserStack, literal, fromIndex, toEnd, furthestException);
-	}
+  ParseState addException(String message, int indexReached, Exception cause);
 
-	public <T> ParseResult<T> parseTo(int toIndex, Function<String, T> transform) {
-		return new ParseResult<>(this, toIndex, literal.substring(fromIndex, toIndex)).mapResult(transform);
-	}
+  ParseState addException(ParseState state);
 
-	public ParseException getException() {
-		return furthestException;
-	}
+  ParseState push(Parser<?> parser);
 
-	public ParseState addException(ParseException exception) {
-		if (exception == null
-				|| (furthestException != null && exception.getIndexReached() < furthestException.getIndexReached()))
-			exception = furthestException;
-
-		return new ParseState(this, exception);
-	}
-
-	public ParseState addException(String message, int indexReached) {
-		return addException(message, indexReached, furthestException);
-	}
-
-	public ParseState addException(String message, int indexReached, Exception cause) {
-		return addException(new ParseException(message, literal, fromIndex, indexReached, cause));
-	}
-
-	public ParseState addException(ParseState state) {
-		return addException(state.getException());
-	}
-
-	public ParseState push(Parser<?> parser) {
-		@SuppressWarnings("unchecked")
-		LinkedList<Parser<?>> stack = (LinkedList<Parser<?>>) parserStack.clone();
-		stack.push(parser);
-		return new ParseState(stack, literal, fromIndex, toEnd, furthestException);
-	}
-
-	public ParseState pop(Parser<?> expected) {
-		@SuppressWarnings("unchecked")
-		LinkedList<Parser<?>> stack = (LinkedList<Parser<?>>) parserStack.clone();
-		if (stack.pop() != expected)
-			throw new ParseException(
-					"Illegal parse state exception on completing '" + expected + "'",
-					literal,
-					fromIndex,
-					fromIndex);
-
-		return new ParseState(stack, literal, fromIndex, toEnd, furthestException);
-	}
+  ParseState pop(Parser<?> expected);
 }
