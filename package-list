@@ -37,6 +37,7 @@ uk.co.strangeskies.reflection.codegen
 uk.co.strangeskies.reflection.resource
 uk.co.strangeskies.reflection.token
 uk.co.strangeskies.text
+uk.co.strangeskies.text.grammar
 uk.co.strangeskies.text.parsing
 uk.co.strangeskies.text.properties
 uk.co.strangeskies.text.provider
