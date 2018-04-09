@@ -44,34 +44,33 @@ import java.util.Set;
  */
 @SuppressWarnings("javadoc")
 public class AnnotationToken {
-	private String stringRepresentation;
-	private Set<Package> packages;
+  private String stringRepresentation;
+  private Set<Package> packages;
 
-	protected AnnotationToken(String stringRepresentation) {
-		this(stringRepresentation, new Class<?>[0]);
-	}
+  protected AnnotationToken(String stringRepresentation) {
+    this(stringRepresentation, new Class<?>[0]);
+  }
 
-	protected AnnotationToken(String stringRepresentation,
-			Class<?>... importedClassPackages) {
-		this.stringRepresentation = stringRepresentation;
+  protected AnnotationToken(String stringRepresentation, Class<?>... importedClassPackages) {
+    this.stringRepresentation = stringRepresentation;
 
-		// Make sure current classloader is aware of all annotation packages
-		getAnnotations();
+    // Make sure current classloader is aware of all annotation packages
+    getAnnotations();
 
-		packages = new HashSet<>();
-		for (Class<?> importedPackage : importedClassPackages)
-			packages.add(importedPackage.getPackage());
-	}
+    packages = new HashSet<>();
+    for (Class<?> importedPackage : importedClassPackages)
+      packages.add(importedPackage.getPackage());
+  }
 
-	public String getStringRepresentation() {
-		return stringRepresentation;
-	}
+  public String getStringRepresentation() {
+    return stringRepresentation;
+  }
 
-	public Annotation[] getAnnotations() {
-		return getClass().getAnnotatedSuperclass().getAnnotations();
-	}
+  public Annotation[] getAnnotations() {
+    return getClass().getAnnotatedSuperclass().getAnnotations();
+  }
 
-	public Set<Package> getPackages() {
-		return new HashSet<>(packages);
-	}
+  public Set<Package> getPackages() {
+    return new HashSet<>(packages);
+  }
 }

@@ -41,6 +41,8 @@ import java.lang.annotation.Target;
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -52,13 +54,13 @@ import org.junit.runners.Parameterized.Parameters;
 class OuterExtendsNested extends Container.Nested<@TestAnnotation Object> {}
 
 class Container {
-	public class Inner<T> {}
+  public class Inner<T> {}
 
-	public class InnerExtendsNested extends Nested<@TestAnnotation Object> {}
+  public class InnerExtendsNested extends Nested<@TestAnnotation Object> {}
 
-	public static class Nested<T> {}
+  public static class Nested<T> {}
 
-	public static class NestedExtendsNested extends Nested<@TestAnnotation Object> {}
+  public static class NestedExtendsNested extends Nested<@TestAnnotation Object> {}
 }
 
 /**
@@ -67,55 +69,62 @@ class Container {
  * @author Elias N Vasylenko
  */
 @SuppressWarnings("javadoc")
+@Ignore
 @RunWith(Parameterized.class)
 public class JavacSupertypeAnnotationsTest {
 
-	@Parameters(name = "{0}")
-	public static Object[][] testClasses() {
-		class StaticInner<T> {}
+  @Parameters(name = "{0}")
+  public static Object[][] testClasses() {
+    class StaticInner<T> {}
 
-		@SuppressWarnings("unused")
-		class StaticInnerExtendsStaticInner extends StaticInner<@TestAnnotation Object> {}
+    @SuppressWarnings("unused")
+    class StaticInnerExtendsStaticInner extends StaticInner<@TestAnnotation Object> {}
 
-		return new Object[][] {
+    return new Object[][] {
 
-				/*-
-				// ecj and javac fail
-				{ "outer extends nested", OuterExtendsNested.class },
-				
-				// ecj and javac fail
-				{ "inner extends nested", Container.InnerExtendsNested.class },
-				
-				// ecj and javac fail
-				{ "nested extends nested", Container.NestedExtendsNested.class },
-				
-				// ecj and javac fail
-				{ "anonymous extends nested", new Container.Nested<@TestAnnotation Object>() {}.getClass() },
-				
-				// ecj fails
-				{ "static inner extends static inner", StaticInnerExtendsStaticInner.class },
-				
-				// ecj fails
-				{ "anonymous extends static inner", new StaticInner<@TestAnnotation Object>() {}.getClass() },
-				
-				// !javac compiler errors!
-				{ "anonymous extends inner", new Container().new Inner<@TestAnnotation Object>() {}.getClass() }
-				 */
-		};
-	}
+        // ecj and javac fail
+        { "outer extends nested", OuterExtendsNested.class },
 
-	private final Class<?> testClass;
+        // ecj and javac fail
+        { "inner extends nested", Container.InnerExtendsNested.class },
 
-	public JavacSupertypeAnnotationsTest(String testName, Class<?> testClass) {
-		this.testClass = testClass;
-	}
+        // ecj and javac fail
+        { "nested extends nested", Container.NestedExtendsNested.class },
 
-	// @Test
-	public void supertypeParameterAnnotationPresenceTest() {
-		AnnotatedParameterizedType superType = (AnnotatedParameterizedType) testClass.getAnnotatedSuperclass();
+        // ecj and javac fail
+        {
+            "anonymous extends nested",
+            new Container.Nested<@TestAnnotation Object>() {}.getClass() },
 
-		AnnotatedType superTypeParameter = superType.getAnnotatedActualTypeArguments()[0];
+        // ecj fails
+        { "static inner extends static inner", StaticInnerExtendsStaticInner.class },
 
-		assertNotNull(superTypeParameter.getAnnotation(TestAnnotation.class));
-	}
+        // ecj fails
+        {
+            "anonymous extends static inner",
+            new StaticInner<@TestAnnotation Object>() {}.getClass() } };
+
+    /*-
+    // !javac compiler errors!
+    {
+        "anonymous extends inner",
+        new Container().new Inner<@TestAnnotation Object>() {}.getClass() } };
+     */
+  }
+
+  private final Class<?> testClass;
+
+  public JavacSupertypeAnnotationsTest(String testName, Class<?> testClass) {
+    this.testClass = testClass;
+  }
+
+  @Test
+  public void supertypeParameterAnnotationPresenceTest() {
+    AnnotatedParameterizedType superType = (AnnotatedParameterizedType) testClass
+        .getAnnotatedSuperclass();
+
+    AnnotatedType superTypeParameter = superType.getAnnotatedActualTypeArguments()[0];
+
+    assertNotNull(superTypeParameter.getAnnotation(TestAnnotation.class));
+  }
 }

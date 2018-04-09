@@ -1,5 +1,6 @@
 Export-Package: \
 	uk.co.strangeskies.text,\
+	uk.co.strangeskies.text.grammar,\
 	uk.co.strangeskies.text.parsing,\
 	uk.co.strangeskies.text.properties,\
 	uk.co.strangeskies.text.properties.localization

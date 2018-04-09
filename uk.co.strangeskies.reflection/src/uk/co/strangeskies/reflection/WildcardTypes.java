@@ -48,269 +48,255 @@ import java.util.stream.Collectors;
  * @author Elias N Vasylenko
  */
 public class WildcardTypes {
-	private static final Type[] DEFAULT_UPPER_BOUND = new Type[] { Object.class };
-	private static final Type[] EMPTY_BOUND = new Type[] {};
+  private static final Type[] DEFAULT_UPPER_BOUND = new Type[] { Object.class };
+  private static final Type[] EMPTY_BOUND = new Type[] {};
 
-	/*
-	 * TODO the spec currently only allows one upper or lower bound. We should
-	 * probably move in line with this since the rest of the spec isn't designed
-	 * to handle the alternative? Or do we want bounds which are intersection
-	 * types to be expanded into arrays?
-	 */
+  /*
+   * TODO the spec currently only allows one upper or lower bound. We should
+   * probably move in line with this since the rest of the spec isn't designed to
+   * handle the alternative? Or do we want bounds which are intersection types to
+   * be expanded into arrays?
+   */
 
-	private static final WildcardType UNBOUNDED = new WildcardType() {
-		@Override
-		public Type[] getUpperBounds() {
-			return DEFAULT_UPPER_BOUND;
-		}
+  private static final WildcardType UNBOUNDED = new WildcardType() {
+    @Override
+    public Type[] getUpperBounds() {
+      return DEFAULT_UPPER_BOUND;
+    }
 
-		@Override
-		public Type[] getLowerBounds() {
-			return EMPTY_BOUND;
-		}
+    @Override
+    public Type[] getLowerBounds() {
+      return EMPTY_BOUND;
+    }
 
-		@Override
-		public String toString() {
-			return "?";
-		}
+    @Override
+    public String toString() {
+      return "?";
+    }
 
-		@Override
-		public boolean equals(Object that) {
-			if (!(that instanceof WildcardType))
-				return false;
-			if (that == this)
-				return true;
+    @Override
+    public boolean equals(Object that) {
+      if (!(that instanceof WildcardType))
+        return false;
+      if (that == this)
+        return true;
 
-			WildcardType wildcard = (WildcardType) that;
+      return Types.equals(this, (WildcardType) that);
+    }
 
-			return wildcard.getLowerBounds().length == 0
-					&& (wildcard.getUpperBounds().length == 0 || (wildcard.getUpperBounds().length == 1
-							&& wildcard.getUpperBounds()[0].equals(Object.class)));
-		}
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
+    }
+  };
 
-		@Override
-		public int hashCode() {
-			return Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
-		}
-	};
+  private WildcardTypes() {}
 
-	private WildcardTypes() {}
+  /**
+   * Create an unbounded wildcard type.
+   * 
+   * @return An instance of {@link WildcardType} representing an unbounded
+   *         wildcard.
+   */
+  public static WildcardType wildcard() {
+    return UNBOUNDED;
+  }
 
-	/**
-	 * Create an unbounded wildcard type.
-	 * 
-	 * @return An instance of {@link WildcardType} representing an unbounded
-	 *         wildcard.
-	 */
-	public static WildcardType wildcard() {
-		return UNBOUNDED;
-	}
+  /**
+   * Create an lower bounded wildcard type.
+   * 
+   * @param bounds
+   *          The types we wish form the lower bounds for a wildcard.
+   * @return An instance of {@link WildcardType} representing a wildcard with the
+   *         given lower bound.
+   */
+  public static WildcardType wildcardSuper(Type... bounds) {
+    return wildcardSuper(Arrays.asList(bounds));
+  }
 
-	/**
-	 * Create an lower bounded wildcard type.
-	 * 
-	 * @param bounds
-	 *          The types we wish form the lower bounds for a wildcard.
-	 * @return An instance of {@link WildcardType} representing a wildcard with
-	 *         the given lower bound.
-	 */
-	public static WildcardType wildcardSuper(Type... bounds) {
-		return wildcardSuper(Arrays.asList(bounds));
-	}
+  /**
+   * Create an lower bounded wildcard type.
+   * 
+   * @param bounds
+   *          The types we wish form the lower bounds for a wildcard.
+   * @return An instance of {@link WildcardType} representing a wildcard with the
+   *         given lower bound.
+   */
+  public static WildcardType wildcardSuper(Collection<? extends Type> bounds) {
+    Type type = intersectionOf(bounds);
 
-	/**
-	 * Create an lower bounded wildcard type.
-	 * 
-	 * @param bounds
-	 *          The types we wish form the lower bounds for a wildcard.
-	 * @return An instance of {@link WildcardType} representing a wildcard with
-	 *         the given lower bound.
-	 */
-	public static WildcardType wildcardSuper(Collection<? extends Type> bounds) {
-		Type type = intersectionOf(bounds);
+    Supplier<Type[]> types;
 
-		Supplier<Type[]> types;
+    if (type instanceof WildcardType) {
+      WildcardType wildcardType = ((WildcardType) type);
+      if (wildcardType.getUpperBounds().length == 0)
+        types = () -> DEFAULT_UPPER_BOUND;
+      else
+        types = () -> wildcardType.getUpperBounds();
+    } else if (type instanceof IntersectionType)
+      types = ((IntersectionType) type)::getTypes;
+    else
+      types = () -> new Type[] { type };
 
-		if (type instanceof WildcardType) {
-			WildcardType wildcardType = ((WildcardType) type);
-			if (wildcardType.getUpperBounds().length == 0)
-				types = () -> DEFAULT_UPPER_BOUND;
-			else
-				types = () -> wildcardType.getUpperBounds();
-		} else if (type instanceof IntersectionType)
-			types = ((IntersectionType) type)::getTypes;
-		else
-			types = () -> new Type[] { type };
+    return new WildcardType() {
+      private Integer hashCode;
 
-		return new WildcardType() {
-			private Integer hashCode;
+      @Override
+      public Type[] getUpperBounds() {
+        return DEFAULT_UPPER_BOUND;
+      }
 
-			@Override
-			public Type[] getUpperBounds() {
-				return DEFAULT_UPPER_BOUND;
-			}
+      @Override
+      public Type[] getLowerBounds() {
+        return types.get();
+      }
 
-			@Override
-			public Type[] getLowerBounds() {
-				return types.get();
-			}
+      @Override
+      public String toString() {
+        return "? super "
+            + Arrays.stream(types.get()).map(Types::toString).collect(Collectors.joining(" & "));
+      }
 
-			@Override
-			public String toString() {
-				return "? super "
-						+ Arrays.stream(types.get()).map(Types::toString).collect(Collectors.joining(" & "));
-			}
+      @Override
+      public boolean equals(Object that) {
+        if (!(that instanceof WildcardType))
+          return false;
+        if (that == this)
+          return true;
 
-			@Override
-			public boolean equals(Object that) {
-				if (!(that instanceof WildcardType))
-					return false;
-				if (that == this)
-					return true;
+        return Types.equals(this, (WildcardType) that);
+      }
 
-				WildcardType wildcard = (WildcardType) that;
+      @Override
+      public synchronized int hashCode() {
+        if (hashCode == null) {
+          /*
+           * This way the hash code will return 0 if we encounter it again in the
+           * parameters, rather than recurring infinitely:
+           * 
+           * (this is not a problem for other threads as hashCode is synchronized)
+           */
+          hashCode = 0;
 
-				Type[] thatUpperBounds = wildcard.getUpperBounds();
-				if (thatUpperBounds.length == 0)
-					thatUpperBounds = DEFAULT_UPPER_BOUND;
+          /*
+           * Calculate the hash code properly, now we're guarded against recursion:
+           */
+          this.hashCode = Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
+        }
 
-				return Arrays.equals(types.get(), wildcard.getLowerBounds())
-						&& Arrays.equals(thatUpperBounds, DEFAULT_UPPER_BOUND);
-			}
+        return hashCode;
+      }
+    };
+  }
 
-			@Override
-			public synchronized int hashCode() {
-				if (hashCode == null) {
-					/*
-					 * This way the hash code will return 0 if we encounter it again in
-					 * the parameters, rather than recurring infinitely:
-					 * 
-					 * (this is not a problem for other threads as hashCode is
-					 * synchronized)
-					 */
-					hashCode = 0;
+  /**
+   * Create an upper bounded wildcard type.
+   * 
+   * @param bounds
+   *          The types we wish form the upper bounds for a wildcard.
+   * @return An instance of {@link WildcardType} representing a wildcard with the
+   *         given upper bound.
+   */
+  public static WildcardType wildcardExtending(Type... bounds) {
+    return wildcardExtending(Arrays.asList(bounds));
+  }
 
-					/*
-					 * Calculate the hash code properly, now we're guarded against
-					 * recursion:
-					 */
-					this.hashCode = Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
-				}
+  /**
+   * Create an upper bounded wildcard type.
+   * 
+   * @param bounds
+   *          The types we wish form the upper bounds for a wildcard.
+   * @return An instance of {@link WildcardType} representing a wildcard with the
+   *         given upper bound.
+   */
+  public static WildcardType wildcardExtending(Collection<? extends Type> bounds) {
+    return new WildcardType() {
+      private Integer hashCode;
+      private Type[] types;
+      private final Runnable typeInitialiser = () -> {
+        if (bounds.isEmpty()) {
+          types = DEFAULT_UPPER_BOUND;
+        } else {
+          types = bounds.toArray(new Type[bounds.size()]);
+          Type type = intersectionOf(bounds);
 
-				return hashCode;
-			}
-		};
-	}
+          if (type instanceof WildcardType) {
+            WildcardType wildcardType = ((WildcardType) type);
+            if (wildcardType.getLowerBounds().length == 0) {
+              throw new ReflectionException(REFLECTION_PROPERTIES.invalidUpperBound(wildcardType));
+            } else {
+              types = wildcardType.getLowerBounds();
+            }
+          } else if (type instanceof IntersectionType) {
+            types = ((IntersectionType) type).getTypes();
+          } else {
+            types = new Type[] { type };
+          }
+        }
+      };
 
-	/**
-	 * Create an upper bounded wildcard type.
-	 * 
-	 * @param bounds
-	 *          The types we wish form the upper bounds for a wildcard.
-	 * @return An instance of {@link WildcardType} representing a wildcard with
-	 *         the given upper bound.
-	 */
-	public static WildcardType wildcardExtending(Type... bounds) {
-		return wildcardExtending(Arrays.asList(bounds));
-	}
+      @Override
+      public Type[] getUpperBounds() {
+        if (types == null)
+          typeInitialiser.run();
+        return types;
+      }
 
-	/**
-	 * Create an upper bounded wildcard type.
-	 * 
-	 * @param bounds
-	 *          The types we wish form the upper bounds for a wildcard.
-	 * @return An instance of {@link WildcardType} representing a wildcard with
-	 *         the given upper bound.
-	 */
-	public static WildcardType wildcardExtending(Collection<? extends Type> bounds) {
-		return new WildcardType() {
-			private Integer hashCode;
-			private Type[] types;
-			private final Runnable typeInitialiser = () -> {
-				if (bounds.isEmpty()) {
-					types = DEFAULT_UPPER_BOUND;
-				} else {
-					types = bounds.toArray(new Type[bounds.size()]);
-					Type type = intersectionOf(bounds);
+      @Override
+      public Type[] getLowerBounds() {
+        return EMPTY_BOUND;
+      }
 
-					if (type instanceof WildcardType) {
-						WildcardType wildcardType = ((WildcardType) type);
-						if (wildcardType.getLowerBounds().length == 0) {
-							throw new ReflectionException(REFLECTION_PROPERTIES.invalidUpperBound(wildcardType));
-						} else {
-							types = wildcardType.getLowerBounds();
-						}
-					} else if (type instanceof IntersectionType) {
-						types = ((IntersectionType) type).getTypes();
-					} else {
-						types = new Type[] { type };
-					}
-				}
-			};
+      @Override
+      public String toString() {
+        Type[] bounds = getUpperBounds();
+        if (bounds.length == 0 || (bounds.length == 1 && bounds[0].equals(Object.class)))
+          return "?";
+        else
+          return "? extends "
+              + Arrays.stream(bounds).map(Types::toString).collect(Collectors.joining(" & "));
+      }
 
-			@Override
-			public Type[] getUpperBounds() {
-				if (types == null)
-					typeInitialiser.run();
-				return types;
-			}
+      @Override
+      public boolean equals(Object that) {
+        if (!(that instanceof WildcardType))
+          return false;
+        if (that == this)
+          return true;
 
-			@Override
-			public Type[] getLowerBounds() {
-				return EMPTY_BOUND;
-			}
+        return Types.equals(this, (WildcardType) that);
+      }
 
-			@Override
-			public String toString() {
-				Type[] bounds = getUpperBounds();
-				if (bounds.length == 0 || (bounds.length == 1 && bounds[0].equals(Object.class)))
-					return "?";
-				else
-					return "? extends "
-							+ Arrays.stream(bounds).map(Types::toString).collect(Collectors.joining(" & "));
-			}
+      @Override
+      public synchronized int hashCode() {
+        if (hashCode == null) {
+          /*
+           * This way the hash code will return 0 if we encounter it again in the
+           * parameters, rather than recurring infinitely:
+           * 
+           * (this is not a problem for other threads as hashCode is synchronized)
+           */
+          hashCode = 0;
 
-			@Override
-			public boolean equals(Object that) {
-				if (!(that instanceof WildcardType))
-					return false;
-				if (that == this)
-					return true;
-				WildcardType wildcard = (WildcardType) that;
+          /*
+           * Calculate the hash code properly, now we're guarded against recursion:
+           */
+          this.hashCode = Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
+        }
 
-				Type[] thisUpperBounds = getUpperBounds();
-				if (thisUpperBounds.length == 1 && thisUpperBounds[0].equals(Object.class))
-					thisUpperBounds = EMPTY_BOUND;
+        return hashCode;
+      }
+    };
+  }
 
-				Type[] thatUpperBounds = wildcard.getUpperBounds();
-				if (thatUpperBounds.length == 1 && thatUpperBounds[0].equals(Object.class))
-					thatUpperBounds = EMPTY_BOUND;
-
-				return wildcard.getLowerBounds().length == 0
-						&& Arrays.equals(thisUpperBounds, thatUpperBounds);
-			}
-
-			@Override
-			public synchronized int hashCode() {
-				if (hashCode == null) {
-					/*
-					 * This way the hash code will return 0 if we encounter it again in
-					 * the parameters, rather than recurring infinitely:
-					 * 
-					 * (this is not a problem for other threads as hashCode is
-					 * synchronized)
-					 */
-					hashCode = 0;
-
-					/*
-					 * Calculate the hash code properly, now we're guarded against
-					 * recursion:
-					 */
-					this.hashCode = Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds());
-				}
-
-				return hashCode;
-			}
-		};
-	}
+  /**
+   * @param wildcard
+   *          the wildcard to test
+   * @return true if the given types has a meaningful upper bound, i.e. other than
+   *         {@link Object}
+   */
+  public static boolean hasUpperBound(WildcardType wildcard) {
+    return wildcard.getUpperBounds().length > 0
+        && !Arrays.equals(wildcard.getUpperBounds(), new Type[] { Object.class });
+  }
 }

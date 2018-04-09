@@ -92,6 +92,7 @@ import uk.co.strangeskies.reflection.Imports;
 import uk.co.strangeskies.reflection.InferenceVariable;
 import uk.co.strangeskies.reflection.InferenceVariableBounds;
 import uk.co.strangeskies.reflection.ParameterizedTypes;
+import uk.co.strangeskies.reflection.PrimitiveTypes;
 import uk.co.strangeskies.reflection.TypeHierarchy;
 import uk.co.strangeskies.reflection.TypeResolver;
 import uk.co.strangeskies.reflection.TypeSubstitution;
@@ -812,7 +813,7 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedType<Typ
    * @return True if the type is primitive, false otherwise.
    */
   public boolean isPrimitive() {
-    return Types.isPrimitive(getType());
+    return PrimitiveTypes.isPrimitive(getType());
   }
 
   /**
@@ -821,7 +822,7 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedType<Typ
    * @return True if the type is a primitive wrapper, false otherwise.
    */
   public boolean isPrimitiveWrapper() {
-    return Types.isPrimitiveWrapper(getType());
+    return PrimitiveTypes.isPrimitiveWrapper(getType());
   }
 
   /**
@@ -833,7 +834,7 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedType<Typ
   @SuppressWarnings("unchecked")
   public TypeToken<T> wrapPrimitive() {
     if (isPrimitive())
-      return (TypeToken<T>) forClass(Types.wrapPrimitive(getErasedType()));
+      return (TypeToken<T>) forClass(PrimitiveTypes.wrapPrimitive(getErasedType()));
     else
       return this;
   }
@@ -848,7 +849,7 @@ public class TypeToken<T> implements DeepCopyable<TypeToken<T>>, ReifiedType<Typ
   @SuppressWarnings("unchecked")
   public TypeToken<T> unwrapPrimitive() {
     if (isPrimitiveWrapper())
-      return (TypeToken<T>) forClass(Types.unwrapPrimitive(getErasedType()));
+      return (TypeToken<T>) forClass(PrimitiveTypes.unwrapPrimitive(getErasedType()));
     else
       return this;
   }

@@ -267,7 +267,7 @@ public class ExecutableToken<O, R> implements MemberToken<O, ExecutableToken<O, 
 
   @Override
   public boolean isRaw() {
-    return isStatic() ? (isGeneric() && typeArguments == null) : MemberToken.super.isRaw();
+    return isGeneric() && typeArguments == null || MemberToken.super.isRaw();
   }
 
   /**
@@ -359,7 +359,7 @@ public class ExecutableToken<O, R> implements MemberToken<O, ExecutableToken<O, 
     else if (isFinal())
       builder.append("final ");
 
-    if (isGeneric()) {
+    if (isGeneric() && !isRaw()) {
       builder
           .append("<")
           .append(
@@ -515,7 +515,7 @@ public class ExecutableToken<O, R> implements MemberToken<O, ExecutableToken<O, 
    */
   @Override
   public ExecutableToken<O, R> withBounds(BoundSet bounds) {
-    if (isRaw() || bounds.isEmpty()) {
+    if (isRaw() || !isGeneric() || bounds.isEmpty()) {
       return this;
     } else {
       return withTypeSubstitution(getBounds().withBounds(bounds), new TypeSubstitution());
@@ -812,9 +812,19 @@ public class ExecutableToken<O, R> implements MemberToken<O, ExecutableToken<O, 
    */
   @Override
   public ExecutableToken<O, R> resolve() {
-    TypeResolver resolver = new TypeResolver(getBounds());
-    resolver.resolve();
-    return withBounds(resolver.getBounds());
+    if (isRaw() || !isGeneric() || bounds.isEmpty()) {
+      return this;
+    } else {
+      TypeResolver resolver = new TypeResolver(getBounds());
+      resolver.resolve();
+      BoundSet bounds = getBounds().withBounds(this.bounds);
+      return withTypeSubstitution(
+          bounds,
+          new TypeSubstitution()
+              .where(
+                  bounds::containsInferenceVariable,
+                  t -> bounds.getBoundsOn((InferenceVariable) t).getInstantiation().orElse(null)));
+    }
   }
 
   /**
@@ -1044,14 +1054,12 @@ public class ExecutableToken<O, R> implements MemberToken<O, ExecutableToken<O, 
 
   private List<ExecutableParameter> determineParameterTypes(
       BoundSet bounds,
-      TypeSubstitution typeSubstitution) {
+      TypeSubstitution typeArguments) {
     return getParameters()
         .map(
             p -> new ExecutableParameter(
                 p.getParameter(),
-                new TypeToken<>(
-                    bounds,
-                    typeSubstitution.resolve(p.getParameter().getParameterizedType()))))
+                new TypeToken<>(bounds, typeArguments.resolve(p.getType()))))
         .collect(toList());
   }
 

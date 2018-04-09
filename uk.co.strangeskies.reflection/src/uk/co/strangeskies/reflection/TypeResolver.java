@@ -175,12 +175,15 @@ public class TypeResolver implements DeepCopyable<TypeResolver> {
       TypeSubstitution substitution = new TypeSubstitution(existingCaptures)
           .where(newCaptures::containsKey, newCaptures::get);
 
-      bounds = concat(newCaptures.entrySet().stream(), existingCaptures.entrySet().stream()).reduce(
-          bounds,
-          (b, e) -> b.withIncorporated().subtype(
-              e.getValue(),
-              substitution.resolve(uncheckedIntersectionOf(e.getKey().getBounds()))),
-          throwingReduce());
+      bounds = concat(newCaptures.entrySet().stream(), existingCaptures.entrySet().stream())
+          .reduce(
+              bounds,
+              (b, e) -> b
+                  .withIncorporated()
+                  .subtype(
+                      e.getValue(),
+                      substitution.resolve(uncheckedIntersectionOf(e.getKey().getBounds()))),
+              throwingReduce());
     }
 
     return newCaptures;
@@ -352,8 +355,9 @@ public class TypeResolver implements DeepCopyable<TypeResolver> {
    */
   public Stream<Entry<InferenceVariable, Type>> resolve() {
     resolveIndependentSet(bounds.getInferenceVariables().collect(toList()));
-    return bounds.getInferenceVariables().map(
-        i -> new AbstractMap.SimpleEntry<>(i, getInstantiation(i)));
+    return bounds
+        .getInferenceVariables()
+        .map(i -> new AbstractMap.SimpleEntry<>(i, getInstantiation(i)));
   }
 
   /**
@@ -433,12 +437,17 @@ public class TypeResolver implements DeepCopyable<TypeResolver> {
 
     resolveIndependentSet(independentSet);
 
-    return variables.stream().map(
-        i -> new AbstractMap.SimpleEntry<>(
-            i,
-            bounds.getBoundsOn(i).getInstantiation().orElseThrow(
-                () -> new ReflectionException(
-                    REFLECTION_PROPERTIES.cannotInstantiateInferenceVariable(i, bounds)))));
+    return variables
+        .stream()
+        .map(
+            i -> new AbstractMap.SimpleEntry<>(
+                i,
+                bounds
+                    .getBoundsOn(i)
+                    .getInstantiation()
+                    .orElseThrow(
+                        () -> new ReflectionException(
+                            REFLECTION_PROPERTIES.cannotInstantiateInferenceVariable(i, bounds)))));
   }
 
   private void resolveIndependentSet(Collection<InferenceVariable> variables) {
@@ -504,7 +513,7 @@ public class TypeResolver implements DeepCopyable<TypeResolver> {
              * If αi has one or more proper lower bounds, L1, ..., Lk, then Ti = lub(L1,
              * ..., Lk) (§4.10.4).
              */
-            instantiationCandidate = Types.leastUpperBound(properLowerBounds);
+            instantiationCandidate = new TypeBounds().leastUpperBound(properLowerBounds);
           } else if (hasThrowableBounds.get()) {
             /*
              * Otherwise, if the bound set contains throws αi, and the proper upper bounds
@@ -517,12 +526,13 @@ public class TypeResolver implements DeepCopyable<TypeResolver> {
              * Otherwise, where αi has proper upper bounds U1, ..., Uk, Ti = glb(U1, ...,
              * Uk) (§5.1.10).
              */
-            instantiationCandidate = Types.greatestLowerBound(
-                bounds
-                    .getBoundsOn(variable)
-                    .getUpperBounds()
-                    .filter(InferenceVariable::isProperType)
-                    .collect(toList()));
+            instantiationCandidate = new TypeBounds()
+                .greatestLowerBound(
+                    bounds
+                        .getBoundsOn(variable)
+                        .getUpperBounds()
+                        .filter(InferenceVariable::isProperType)
+                        .collect(toList()));
           }
 
           instantiationCandidates.put(variable, instantiationCandidate);

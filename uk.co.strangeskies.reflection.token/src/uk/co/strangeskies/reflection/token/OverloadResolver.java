@@ -154,10 +154,11 @@ public class OverloadResolver<I extends ExecutableToken<?, ?>> {
           compatibleCandidates,
           i -> (I) i.withVariableArityApplicability(parameters),
           putFailures);
+
     } else {
       Set<? extends I> oldCompatibleCandidates = compatibleCandidates;
       compatibleCandidates = filterOverloadCandidates(
-          compatibleCandidates,
+          candidates,
           i -> (I) i.withStrictApplicability(parameters),
           putFailures);
       if (compatibleCandidates.isEmpty())
@@ -238,8 +239,12 @@ public class OverloadResolver<I extends ExecutableToken<?, ?>> {
                 .cannotResolveAmbiguity(candidate.getMember(), mostSpecificFinal.getMember()));
       }
 
-      mostSpecific = candidate.getMember().getDeclaringClass().isAssignableFrom(
-          mostSpecific.getMember().getDeclaringClass()) ? candidate : mostSpecific;
+      mostSpecific = candidate
+          .getMember()
+          .getDeclaringClass()
+          .isAssignableFrom(mostSpecific.getMember().getDeclaringClass())
+              ? candidate
+              : mostSpecific;
     }
 
     return mostSpecific;
@@ -352,25 +357,28 @@ public class OverloadResolver<I extends ExecutableToken<?, ?>> {
 
     try {
       List<ExecutableParameter> firstParameters = firstCandidate.getParameters().collect(toList());
-      List<ExecutableParameter> genericParameters = genericCandidate.getParameters().collect(
-          toList());
+      List<ExecutableParameter> genericParameters = genericCandidate
+          .getParameters()
+          .collect(toList());
       int parameters = firstParameters.size();
       if (firstCandidate.isVariableArityDefinition()) {
         parameters--;
 
-        resolver.reduceConstraint(
-            new ConstraintFormula(
-                Kind.SUBTYPE,
-                firstParameters.get(parameters).getType(),
-                genericParameters.get(parameters).getType()));
+        resolver
+            .reduceConstraint(
+                new ConstraintFormula(
+                    Kind.SUBTYPE,
+                    firstParameters.get(parameters).getType(),
+                    genericParameters.get(parameters).getType()));
       }
 
       for (int i = 0; i < parameters; i++) {
-        resolver.reduceConstraint(
-            new ConstraintFormula(
-                Kind.SUBTYPE,
-                firstParameters.get(i).getType(),
-                genericParameters.get(i).getType()));
+        resolver
+            .reduceConstraint(
+                new ConstraintFormula(
+                    Kind.SUBTYPE,
+                    firstParameters.get(i).getType(),
+                    genericParameters.get(i).getType()));
       }
 
       resolver.resolve();

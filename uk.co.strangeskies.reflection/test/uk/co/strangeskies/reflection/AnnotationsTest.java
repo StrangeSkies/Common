@@ -32,18 +32,17 @@
  */
 package uk.co.strangeskies.reflection;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
+
 import java.lang.annotation.Annotation;
 
-import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.experimental.theories.DataPoint;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 
-import uk.co.strangeskies.reflection.Annotations;
-import uk.co.strangeskies.reflection.Imports;
 import uk.co.strangeskies.reflection.annotations.ClassProperty;
 import uk.co.strangeskies.reflection.annotations.Plain;
 import uk.co.strangeskies.reflection.annotations.StringProperty;
@@ -51,65 +50,74 @@ import uk.co.strangeskies.reflection.annotations.StringProperty;
 @SuppressWarnings("javadoc")
 @RunWith(Theories.class)
 public class AnnotationsTest {
-	@DataPoint
-	public static AnnotationToken PLAIN = new @Plain AnnotationToken(
-			"@uk.co.strangeskies.reflection.annotations.Plain") {};
+  @DataPoint
+  public static AnnotationToken PLAIN = new @Plain AnnotationToken(
+      "@uk.co.strangeskies.reflection.annotations.Plain") {};
 
-	@DataPoint
-	public static AnnotationToken PLAIN_IMPORTED = new @Plain AnnotationToken(
-			"@Plain", Plain.class) {};
+  @DataPoint
+  public static AnnotationToken PLAIN_IMPORTED = new @Plain AnnotationToken(
+      "@Plain",
+      Plain.class) {};
 
-	@DataPoint
-	public static AnnotationToken CLASS_PROPERTY = new @ClassProperty(property = Object.class) AnnotationToken(
-			"@uk.co.strangeskies.reflection.annotations.ClassProperty(property = java.lang.Object.class)") {};
+  @DataPoint
+  public static AnnotationToken CLASS_PROPERTY = new @ClassProperty(
+      property = Object.class) AnnotationToken(
+          "@uk.co.strangeskies.reflection.annotations.ClassProperty(property = java.lang.Object.class)") {};
 
-	@DataPoint
-	public static AnnotationToken CLASS_PROPERTY_IMPORTED = new @ClassProperty(property = Object.class) AnnotationToken(
-			"@ClassProperty(property = Object.class)", ClassProperty.class,
-			Object.class) {};
+  @DataPoint
+  public static AnnotationToken CLASS_PROPERTY_IMPORTED = new @ClassProperty(
+      property = Object.class) AnnotationToken(
+          "@ClassProperty(property = Object.class)",
+          ClassProperty.class,
+          Object.class) {};
 
-	@DataPoint
-	public static AnnotationToken STRING_PROPERTY = new @StringProperty(property = "string") AnnotationToken(
-			"@uk.co.strangeskies.reflection.annotations.StringProperty(property = \"string\")") {};
+  @DataPoint
+  public static AnnotationToken STRING_PROPERTY = new @StringProperty(
+      property = "string") AnnotationToken(
+          "@uk.co.strangeskies.reflection.annotations.StringProperty(property = \"string\")") {};
 
-	@DataPoint
-	public static AnnotationToken STRING_PROPERTY_IMPORTED = new @StringProperty(property = "string") AnnotationToken(
-			"@StringProperty(property = \"string\")", StringProperty.class,
-			Object.class) {};
+  @DataPoint
+  public static AnnotationToken STRING_PROPERTY_IMPORTED = new @StringProperty(
+      property = "string") AnnotationToken(
+          "@StringProperty(property = \"string\")",
+          StringProperty.class,
+          Object.class) {};
 
-	@DataPoint
-	public static AnnotationToken STRING_PROPERTY_SYMBOLS1 = new @StringProperty(property = "\n") AnnotationToken(
-			"@StringProperty(property = \"\\n\")", StringProperty.class,
-			Object.class) {};
+  @DataPoint
+  public static AnnotationToken STRING_PROPERTY_SYMBOLS1 = new @StringProperty(
+      property = "\n") AnnotationToken(
+          "@StringProperty(property = \"\\n\")",
+          StringProperty.class,
+          Object.class) {};
 
-	@DataPoint
-	public static AnnotationToken STRING_PROPERTY_SYMBOLS2 = new @StringProperty(property = "\"<>()[]{}\"") AnnotationToken(
-			"@StringProperty(property = \"\\\"<>()[]{}\\\"\")", StringProperty.class,
-			Object.class) {};
+  @DataPoint
+  public static AnnotationToken STRING_PROPERTY_SYMBOLS2 = new @StringProperty(
+      property = "\"<>()[]{}\"") AnnotationToken(
+          "@StringProperty(property = \"\\\"<>()[]{}\\\"\")",
+          StringProperty.class,
+          Object.class) {};
 
-	@Theory
-	public void toStringWithoutPackageImport(AnnotationToken token) {
-		Assume.assumeTrue("Assuming no package imports",
-				token.getPackages().isEmpty());
-		Annotation annotation = assumeSingleAnnotation(token);
+  @Theory
+  public void toStringWithoutPackageImport(AnnotationToken token) {
+    Assume.assumeTrue("Assuming no package imports", token.getPackages().isEmpty());
+    Annotation annotation = assumeSingleAnnotation(token);
 
-		Assert.assertEquals(token.getStringRepresentation(),
-				Annotations.toString(annotation));
-	}
+    assertThat(Annotations.toString(annotation)).isEqualTo(token.getStringRepresentation());
+  }
 
-	@Theory
-	public void toStringWithPackageImport(AnnotationToken token) {
-		Assume.assumeFalse("Assuming package imports",
-				token.getPackages().isEmpty());
-		Annotation annotation = assumeSingleAnnotation(token);
+  @Theory
+  public void toStringWithPackageImport(AnnotationToken token) {
+    assumeThat(token.getPackages()).describedAs("package imports").isNotEmpty();
 
-		Assert.assertEquals(token.getStringRepresentation(), Annotations.toString(
-				annotation, Imports.empty().withPackageImports(token.getPackages())));
-	}
+    Annotation annotation = assumeSingleAnnotation(token);
 
-	private Annotation assumeSingleAnnotation(AnnotationToken token) {
-		Assume.assumeThat("Assuming a single annotation",
-				token.getAnnotations().length, Matchers.is(1));
-		return token.getAnnotations()[0];
-	}
+    assertThat(
+        Annotations.toString(annotation, Imports.empty().withPackageImports(token.getPackages())))
+            .isEqualTo(token.getStringRepresentation());
+  }
+
+  private Annotation assumeSingleAnnotation(AnnotationToken token) {
+    assumeThat(token.getAnnotations().length).describedAs("number of annotations").isEqualTo(1);
+    return token.getAnnotations()[0];
+  }
 }
