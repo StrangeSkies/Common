@@ -32,7 +32,6 @@
  */
 package uk.co.strangeskies.collection.stream;
 
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
 
@@ -107,15 +106,6 @@ public class StreamUtilities {
   @SuppressWarnings("unchecked")
   public static <T> Optional<T> upcastOptional(Optional<? extends T> stream) {
     return (Optional<T>) stream;
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T> Stream<T> streamOptional(Optional<? extends T> optional) {
-    return (Stream<T>) optional.map(Stream::of).orElse(Stream.empty());
-  }
-
-  public static <T> Stream<T> streamNullable(T optional) {
-    return ofNullable(optional).map(Stream::of).orElse(Stream.empty());
   }
 
   public static <T> Optional<T> tryOptional(ThrowingSupplier<? extends T, ?> attempt) {
@@ -227,10 +217,14 @@ public class StreamUtilities {
       }
     };
 
-    return StreamSupport.stream(
-        Spliterators
-            .spliterator(iterator, collection.size(), Spliterator.ORDERED | Spliterator.IMMUTABLE),
-        false);
+    return StreamSupport
+        .stream(
+            Spliterators
+                .spliterator(
+                    iterator,
+                    collection.size(),
+                    Spliterator.ORDERED | Spliterator.IMMUTABLE),
+            false);
   }
 
   /**
@@ -304,9 +298,11 @@ public class StreamUtilities {
         return result;
       }
     };
-    return StreamSupport.stream(
-        Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED | Spliterator.IMMUTABLE),
-        false);
+    return StreamSupport
+        .stream(
+            Spliterators
+                .spliteratorUnknownSize(iterator, Spliterator.ORDERED | Spliterator.IMMUTABLE),
+            false);
   }
 
   /**
@@ -391,7 +387,8 @@ public class StreamUtilities {
       Stream<? extends T> stream,
       Function<? super T, ? extends Stream<? extends T>> mapping,
       Set<T> visited) {
-    return stream.filter(visited::add).flatMap(
-        s -> concat(of(s), flatMapRecursiveDistinct(mapping.apply(s), mapping, visited)));
+    return stream
+        .filter(visited::add)
+        .flatMap(s -> concat(of(s), flatMapRecursiveDistinct(mapping.apply(s), mapping, visited)));
   }
 }

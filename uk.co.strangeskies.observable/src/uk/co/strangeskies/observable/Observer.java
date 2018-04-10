@@ -32,7 +32,6 @@
  */
 package uk.co.strangeskies.observable;
 
-import java.util.Observable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 

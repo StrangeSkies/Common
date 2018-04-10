@@ -39,6 +39,7 @@ import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.time.LocalDate;
@@ -372,8 +373,11 @@ class PropertyLoaderImpl implements PropertyLoader {
   public <T extends PropertyResourceStrategy<T>> T getResourceStrategy(Class<T> strategy) {
     return (T) resourceStrategies.computeIfAbsent(strategy, k -> {
       try {
-        return strategy.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
+        return strategy.getConstructor().newInstance();
+      } catch (
+          InstantiationException
+          | IllegalAccessException
+          | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
         throw new PropertyLoaderException(getProperties().cannotInstantiateStrategy(strategy), e);
       }
     });

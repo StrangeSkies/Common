@@ -66,6 +66,14 @@ configure(bndProjects()) {
     mavenCentral()
   }
 
+  test {
+    jvmArgs = ['-Djdk.attach.allowAttachSelf']
+  }
+
+  jacoco {
+    toolVersion = "0.8.0"
+  }
+
   jacocoTestReport {
     reports {
       xml.enabled true

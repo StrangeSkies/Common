@@ -41,7 +41,6 @@ import static org.objectweb.asm.Opcodes.DUP;
 import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 import static org.objectweb.asm.Opcodes.NEW;
 import static org.objectweb.asm.Type.getInternalName;
-import static uk.co.strangeskies.collection.stream.StreamUtilities.streamOptional;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.throwingReduce;
 import static uk.co.strangeskies.reflection.codegen.CodeGenerationException.CODEGEN_PROPERTIES;
 
@@ -124,8 +123,10 @@ public class ClassDefinition<E, T> extends Definition<ClassDeclaration<E, T>> {
         getDeclaration().methodDeclarations(),
         getDeclaration().staticMethodDeclarations())
             .flatMap(
-                m -> streamOptional(
-                    methodImplementor.getImplementation(m).map(i -> new SimpleEntry<>(m, i))))
+                m -> methodImplementor
+                    .getImplementation(m)
+                    .map(i -> new SimpleEntry<>(m, i))
+                    .stream())
             .reduce(throwingReduce())
             .map(
                 e -> new ClassDefinition<>(
@@ -141,8 +142,10 @@ public class ClassDefinition<E, T> extends Definition<ClassDeclaration<E, T>> {
         getDeclaration().methodDeclarations(),
         getDeclaration().staticMethodDeclarations())
             .flatMap(
-                m -> streamOptional(
-                    methodImplementor.getImplementation(m).map(i -> new SimpleEntry<>(m, i))))
+                m -> methodImplementor
+                    .getImplementation(m)
+                    .map(i -> new SimpleEntry<>(m, i))
+                    .stream())
             .reduce(
                 this,
                 (c, e) -> new ClassDefinition<>(
@@ -174,12 +177,15 @@ public class ClassDefinition<E, T> extends Definition<ClassDeclaration<E, T>> {
         methodVisitor.visitTypeInsn(NEW, getInternalName(UnsupportedOperationException.class));
         methodVisitor.visitInsn(DUP);
         try {
-          methodVisitor.visitMethodInsn(
-              INVOKESPECIAL,
-              getInternalName(UnsupportedOperationException.class),
-              "<init>",
-              Type.getConstructorDescriptor(UnsupportedOperationException.class.getConstructor()),
-              false);
+          methodVisitor
+              .visitMethodInsn(
+                  INVOKESPECIAL,
+                  getInternalName(UnsupportedOperationException.class),
+                  "<init>",
+                  Type
+                      .getConstructorDescriptor(
+                          UnsupportedOperationException.class.getConstructor()),
+                  false);
         } catch (NoSuchMethodException | SecurityException e) {
           throw new AssertionError(e);
         }

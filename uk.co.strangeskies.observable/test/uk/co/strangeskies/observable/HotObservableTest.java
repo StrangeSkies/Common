@@ -37,8 +37,9 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import mockit.FullVerificationsInOrder;
+import mockit.FullVerifications;
 import mockit.Injectable;
+import mockit.VerificationsInOrder;
 
 @SuppressWarnings("javadoc")
 public class HotObservableTest {
@@ -50,11 +51,12 @@ public class HotObservableTest {
     HotObservable<String> observable = new HotObservable<>();
     observable.observe(downstreamObserver);
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         downstreamObserver.onObserve((Observation) any);
       }
     };
+    new FullVerifications() {};
   }
 
   @Test
@@ -138,12 +140,13 @@ public class HotObservableTest {
     observable.observe(downstreamObserver);
     observable.next("message");
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         downstreamObserver.onObserve((Observation) any);
         downstreamObserver.onNext("message");
       }
     };
+    new FullVerifications() {};
   }
 
   @Test
@@ -152,12 +155,13 @@ public class HotObservableTest {
     observable.observe(downstreamObserver);
     observable.complete();
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         downstreamObserver.onObserve((Observation) any);
         downstreamObserver.onComplete();
       }
     };
+    new FullVerifications() {};
   }
 
   @Test
@@ -168,12 +172,13 @@ public class HotObservableTest {
     observable.observe(downstreamObserver);
     observable.fail(t);
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         downstreamObserver.onObserve((Observation) any);
         downstreamObserver.onFail(t);
       }
     };
+    new FullVerifications() {};
   }
 
   @Test

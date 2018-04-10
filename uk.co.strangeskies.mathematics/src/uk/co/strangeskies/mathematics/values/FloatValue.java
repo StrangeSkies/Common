@@ -154,7 +154,7 @@ public final class FloatValue extends ContinuousValue<FloatValue> {
 
   @Override
   public final String toString() {
-    return new Float(value).toString();
+    return Float.toString(value);
   }
 
   @Override
@@ -165,7 +165,7 @@ public final class FloatValue extends ContinuousValue<FloatValue> {
 
   @Override
   public final int compareToAtSupportedPrecision(Value<?> other) {
-    return new Float(this.value).compareTo(new Float(other.floatValue()));
+    return Float.compare(this.value, other.floatValue());
   }
 
   @Override
@@ -189,7 +189,7 @@ public final class FloatValue extends ContinuousValue<FloatValue> {
 
   @Override
   public final int hashCode() {
-    return new Float(value).hashCode();
+    return Float.hashCode(value);
   }
 
   @Override

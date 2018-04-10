@@ -153,7 +153,7 @@ public final class IntValue extends IntegralValue<IntValue> {
 
   @Override
   public final String toString() {
-    return new Integer(value).toString();
+    return Integer.toString(value);
   }
 
   @Override
@@ -164,7 +164,7 @@ public final class IntValue extends IntegralValue<IntValue> {
 
   @Override
   public final int compareToAtSupportedPrecision(Value<?> other) {
-    return new Integer(this.value).compareTo(new Integer(other.intValue()));
+    return Integer.compare(this.value, other.intValue());
   }
 
   @Override
@@ -188,7 +188,7 @@ public final class IntValue extends IntegralValue<IntValue> {
 
   @Override
   public final int hashCode() {
-    return new Integer(value).hashCode();
+    return Integer.hashCode(value);
   }
 
   @Override

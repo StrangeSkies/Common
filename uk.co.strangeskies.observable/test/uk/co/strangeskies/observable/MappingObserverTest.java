@@ -34,8 +34,9 @@ package uk.co.strangeskies.observable;
 
 import org.junit.Test;
 
-import mockit.FullVerificationsInOrder;
+import mockit.FullVerifications;
 import mockit.Injectable;
+import mockit.VerificationsInOrder;
 
 @SuppressWarnings("javadoc")
 public class MappingObserverTest {
@@ -55,7 +56,7 @@ public class MappingObserverTest {
     test.onNext("three");
     test.onNext("four");
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         downstreamObserver.onObserve(upstreamObservation);
         downstreamObserver.onNext("one!");
@@ -64,6 +65,7 @@ public class MappingObserverTest {
         downstreamObserver.onNext("four!");
       }
     };
+    new FullVerifications() {};
   }
 
   @Test(expected = NullPointerException.class)

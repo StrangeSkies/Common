@@ -110,8 +110,6 @@ public class ClassDeclaration<E, T> extends ParameterizedDeclaration<ClassSignat
         .map(context::getClassDeclaration)
         .orElse(null);
 
-    context.registerClassDeclaration(this);
-
     this.constructorDeclarations = signature
         .getConstructors()
         .map(s -> declareConstructor(this, s, stubClassWriter))
@@ -135,9 +133,10 @@ public class ClassDeclaration<E, T> extends ParameterizedDeclaration<ClassSignat
   private String writeGenericSupertypes(SignatureWriter writer) {
     String typeSignature;
     writer.visitSuperclass();
-    ClassWritingContext.visitTypeSignature(
-        writer,
-        getSignature().getSuperClass().map(AnnotatedType::getType).orElse(Object.class));
+    ClassWritingContext
+        .visitTypeSignature(
+            writer,
+            getSignature().getSuperClass().map(AnnotatedType::getType).orElse(Object.class));
     getSignature().getSuperInterfaces().map(AnnotatedType::getType).forEach(type -> {
       writer.visitInterface();
       ClassWritingContext.visitTypeSignature(writer, type);
@@ -233,9 +232,10 @@ public class ClassDeclaration<E, T> extends ParameterizedDeclaration<ClassSignat
             .map(Types::getErasedType)
             .toArray(Class<?>[]::new));
 
-    if (!StreamUtilities.equals(
-        signature.getParameters().map(ParameterSignature::getType),
-        declaration.getSignature().getParameters().map(ParameterSignature::getType))) {
+    if (!StreamUtilities
+        .equals(
+            signature.getParameters().map(ParameterSignature::getType),
+            declaration.getSignature().getParameters().map(ParameterSignature::getType))) {
       throw new CodeGenerationException(
           CODEGEN_PROPERTIES.cannotFindMethodOn(stubClass, signature.erased()));
     }
@@ -254,9 +254,10 @@ public class ClassDeclaration<E, T> extends ParameterizedDeclaration<ClassSignat
             .map(Types::getErasedType)
             .toArray(Class<?>[]::new));
 
-    if (!StreamUtilities.equals(
-        signature.getParameters().map(ParameterSignature::getType),
-        declaration.getSignature().getParameters().map(ParameterSignature::getType))) {
+    if (!StreamUtilities
+        .equals(
+            signature.getParameters().map(ParameterSignature::getType),
+            declaration.getSignature().getParameters().map(ParameterSignature::getType))) {
       throw new CodeGenerationException(
           CODEGEN_PROPERTIES.cannotFindMethodOn(stubClass, signature.erased()));
     }
@@ -275,9 +276,10 @@ public class ClassDeclaration<E, T> extends ParameterizedDeclaration<ClassSignat
             .map(Types::getErasedType)
             .toArray(Class<?>[]::new));
 
-    if (!StreamUtilities.equals(
-        signature.getParameters().map(ParameterSignature::getType),
-        declaration.getSignature().getParameters().map(ParameterSignature::getType))) {
+    if (!StreamUtilities
+        .equals(
+            signature.getParameters().map(ParameterSignature::getType),
+            declaration.getSignature().getParameters().map(ParameterSignature::getType))) {
       throw new CodeGenerationException(
           CODEGEN_PROPERTIES.cannotFindMethodOn(stubClass, signature.erased()));
     }

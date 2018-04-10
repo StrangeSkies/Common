@@ -33,6 +33,8 @@
 package uk.co.strangeskies.reflection.codegen;
 
 import static java.util.Arrays.stream;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.Optional.ofNullable;
 import static uk.co.strangeskies.reflection.codegen.CodeGenerationException.CODEGEN_PROPERTIES;
 import static uk.co.strangeskies.reflection.codegen.MethodDeclaration.Kind.CONSTRUCTOR;
@@ -64,18 +66,22 @@ import java.util.stream.Collectors;
  * @author Elias N Vasylenko
  */
 public class ClassRegister {
-  class ClassRegistrationContext {
+  static class ClassRegistrationContext {
+    private final Map<String, ClassDeclaration<?, ?>> classDeclarations;
+    private final ByteArrayClassLoader stubClassLoader;
+
+    public ClassRegistrationContext(ClassRegister register) {
+      classDeclarations = new HashMap<>(register.classDeclarations);
+      stubClassLoader = register.stubClassLoader;
+    }
+
     ClassDeclaration<?, ?> getClassDeclaration(String className) {
-      return getClassDeclaration(getClassSignature(className));
+      return null /* TODO getClassDeclaration(getClassSignature(className)) */;
     }
 
     ClassDeclaration<?, ?> getClassDeclaration(ClassSignature<?> signature) {
       return classDeclarations
           .computeIfAbsent(signature.getClassName(), s -> new ClassDeclaration<>(this, signature));
-    }
-
-    void registerClassDeclaration(ClassDeclaration<?, ?> declaration) {
-      classDeclarations.put(declaration.getSignature().getClassName(), declaration);
     }
 
     @SuppressWarnings("unchecked")
@@ -112,10 +118,10 @@ public class ClassRegister {
   public ClassRegister(ClassLoader classLoader) {
     this.classLoader = classLoader;
     this.stubClassLoader = new ByteArrayClassLoader(classLoader);
-    this.classDeclarations = new HashMap<>();
-    this.classBytecodes = new HashMap<>();
-    this.methodDefinitions = new HashMap<>();
-    this.undefinedMethods = new HashSet<>();
+    this.classDeclarations = emptyMap();
+    this.classBytecodes = emptyMap();
+    this.methodDefinitions = emptyMap();
+    this.undefinedMethods = emptySet();
     this.allowPartialImplementation = false;
   }
 
@@ -154,18 +160,21 @@ public class ClassRegister {
       });
     }
 
-    Map<MethodDeclaration<?, ?>, MethodImplementation<?>> methodDefinitions = this.methodDefinitions;
-    Set<MethodDeclaration<?, ?>> undefinedMethods = this.undefinedMethods;
+    Map<MethodDeclaration<?, ?>, MethodImplementation<?>> methodDefinitions = new HashMap<>(
+        this.methodDefinitions);
+    Set<MethodDeclaration<?, ?>> undefinedMethods = new HashSet<>(this.undefinedMethods);
 
-    stream(classSignatures).forEach(
-        signature -> new ClassRegistrationContext()
-            .getClassDeclaration(signature)
-            .methodDeclarations()
-            .filter(m -> !methodDefinitions.keySet().contains(m))
-            .forEach(undefinedMethods::add));
+    ClassRegistrationContext context = new ClassRegistrationContext(this);
+    stream(classSignatures)
+        .forEach(
+            signature -> context
+                .getClassDeclaration(signature)
+                .methodDeclarations()
+                .filter(m -> !methodDefinitions.keySet().contains(m))
+                .forEach(undefinedMethods::add));
 
     return new ClassRegister(
-        classDeclarations,
+        context.classDeclarations,
         classBytecodes,
         methodDefinitions,
         undefinedMethods,
@@ -286,10 +295,14 @@ public class ClassRegister {
   }
 
   public Map<String, byte[]> generateClasses() {
-    return classDeclarations.values().stream().collect(
-        Collectors.toMap(
-            declaration -> declaration.getSignature().getClassName(),
-            declaration -> new ClassDefinition<>(declaration, this).writeClass()));
+    return classDeclarations
+        .values()
+        .stream()
+        .collect(
+            Collectors
+                .toMap(
+                    declaration -> declaration.getSignature().getClassName(),
+                    declaration -> new ClassDefinition<>(declaration, this).writeClass()));
   }
 
   /**

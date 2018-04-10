@@ -40,7 +40,6 @@ import static uk.co.strangeskies.observable.RequestAllocator.spread;
 import org.junit.Test;
 
 import mockit.Expectations;
-import mockit.FullVerificationsInOrder;
 import mockit.Injectable;
 import mockit.VerificationsInOrder;
 
@@ -57,9 +56,10 @@ public class SpreadRequestAllocatorTest {
 
   @Test
   public void allocateUnbounded() {
-    long remaining = spread.allocateRequests(
-        Long.MAX_VALUE,
-        asList(firstObservation, secondObservation, thirdObservation));
+    long remaining = spread
+        .allocateRequests(
+            Long.MAX_VALUE,
+            asList(firstObservation, secondObservation, thirdObservation));
 
     assertThat(remaining, equalTo(Long.MAX_VALUE));
 
@@ -106,7 +106,7 @@ public class SpreadRequestAllocatorTest {
 
     assertThat(remaining, equalTo(0l));
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         firstObservation.request(1);
         secondObservation.request(1);

@@ -33,39 +33,39 @@
 package uk.co.strangeskies.mathematics;
 
 public class MovingAverage extends Distribution {
-	private boolean full;
-	private int size;
+  private boolean full;
+  private int size;
 
-	public MovingAverage(int size) {
-		this.size = size;
-	}
+  public MovingAverage(int size) {
+    this.size = size;
+  }
 
-	@Override
-	public void addValue(double value) {
-		getValues().add(new Double(value));
+  @Override
+  public void addValue(double value) {
+    getValues().add(value);
 
-		setSum(getSum() + value);
-		if (full) {
-			setSum(getSum() - getValues().remove(0));
-		}
-		setAverage(getSum() / getCount());
+    setSum(getSum() + value);
+    if (full) {
+      setSum(getSum() - getValues().remove(0));
+    }
+    setAverage(getSum() / getCount());
 
-		calculateMeanAbsoluteDeviation();
+    calculateMeanAbsoluteDeviation();
 
-		if (!full && getCount() == size) {
-			full = true;
-		}
-	}
+    if (!full && getCount() == size) {
+      full = true;
+    }
+  }
 
-	@Override
-	public void clear() {
-		super.clear();
-		full = false;
-	}
+  @Override
+  public void clear() {
+    super.clear();
+    full = false;
+  }
 
-	public void clear(int size) {
-		super.clear();
-		full = false;
-		this.size = size;
-	}
+  public void clear(int size) {
+    super.clear();
+    full = false;
+    this.size = size;
+  }
 }

@@ -39,7 +39,6 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.entriesToMap;
-import static uk.co.strangeskies.collection.stream.StreamUtilities.streamOptional;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.throwingReduce;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.tryOptional;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.zip;
@@ -766,10 +765,9 @@ public class ExecutableToken<O, R> implements MemberToken<O, ExecutableToken<O, 
       override = StreamUtilities
           .<Class<?>>iterate(type.getErasedType(), Class::getSuperclass)
           .flatMap(
-              t -> streamOptional(
-                  tryOptional(
-                      () -> getErasedType(t)
-                          .getDeclaredMethod(getName(), getMember().getParameterTypes()))))
+              t -> tryOptional(
+                  () -> getErasedType(t)
+                      .getDeclaredMethod(getName(), getMember().getParameterTypes())).stream())
           .findFirst()
           .orElse(null);
     }

@@ -165,7 +165,7 @@ public class LongValue extends IntegralValue<LongValue> {
 
   @Override
   public final int compareToAtSupportedPrecision(Value<?> other) {
-    return Long.compare(this.value, new Long(other.longValue()));
+    return Long.compare(this.value, other.longValue());
   }
 
   @Override
@@ -251,7 +251,7 @@ public class LongValue extends IntegralValue<LongValue> {
 
   @Override
   public final float getMultipliedPrimitive(float value) {
-    return (float) this.value * value;
+    return this.value * value;
   }
 
   @Override

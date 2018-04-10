@@ -160,7 +160,7 @@ public final class DoubleValue extends ContinuousValue<DoubleValue> {
 
   @Override
   public final String toString() {
-    return new Double(value).toString();
+    return Double.toString(value);
   }
 
   @Override
@@ -179,7 +179,7 @@ public final class DoubleValue extends ContinuousValue<DoubleValue> {
 
   @Override
   public final int compareToAtSupportedPrecision(Value<?> other) {
-    return new Double(this.value).compareTo(new Double(other.doubleValue()));
+    return Double.compare(this.value, other.doubleValue());
   }
 
   @Override
@@ -203,7 +203,7 @@ public final class DoubleValue extends ContinuousValue<DoubleValue> {
 
   @Override
   public final int hashCode() {
-    return new Double(value).hashCode();
+    return Double.hashCode(value);
   }
 
   @Override

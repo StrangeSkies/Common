@@ -32,13 +32,13 @@
  */
 package uk.co.strangeskies.expression;
 
-import java.util.Observer;
 import java.util.function.Supplier;
 
 import uk.co.strangeskies.observable.HotObservable;
 import uk.co.strangeskies.observable.ImmutableObservable;
 import uk.co.strangeskies.observable.Observable;
 import uk.co.strangeskies.observable.ObservableValue;
+import uk.co.strangeskies.observable.Observer;
 
 /**
  * <p>

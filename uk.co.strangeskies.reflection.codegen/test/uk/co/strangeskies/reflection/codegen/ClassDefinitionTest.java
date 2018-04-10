@@ -45,6 +45,8 @@ import static uk.co.strangeskies.reflection.token.MethodMatcher.anyConstructor;
 import static uk.co.strangeskies.reflection.token.MethodMatcher.anyMethod;
 import static uk.co.strangeskies.reflection.token.VariableMatcher.anyVariable;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -72,29 +74,32 @@ public class ClassDefinitionTest {
   public static final TypeToken<String> STRING_TYPE = new TypeToken<String>() {};
 
   @Test
-  public void defineObject() throws InstantiationException, IllegalAccessException {
+  public void defineObject() throws InstantiationException, IllegalAccessException,
+      InvocationTargetException, NoSuchMethodException {
     Object instance = new ClassRegister(createClassLoader())
         .withClassSignature(TEST_CLASS_SIGNATURE)
         .loadClass()
+        .getConstructor()
         .newInstance();
 
     instance.hashCode();
   }
 
   @Test
-  public void runnableClassInvocation() throws InstantiationException, IllegalAccessException {
+  public void runnableClassInvocation() throws InstantiationException, IllegalAccessException,
+      InvocationTargetException, NoSuchMethodException {
     ClassDefinition<Void, ? extends Runnable> classDefinition = new ClassRegister(
         createClassLoader()).withClassSignature(TEST_CLASS_SIGNATURE.extending(Runnable.class));
     classDefinition = classDefinition.withImplementation(anyMethod().named("run"), empty());
 
-    Runnable instance = classDefinition.loadClass().newInstance();
+    Runnable instance = classDefinition.loadClass().getConstructor().newInstance();
 
     instance.run();
   }
 
   @Test
-  public void defineWithExplicitMethodDeclaration()
-      throws InstantiationException, IllegalAccessException {
+  public void defineWithExplicitMethodDeclaration() throws InstantiationException,
+      IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     /*
      * A block is something we don't always know the type of until we resolve the
      * type of it's context, e.g. in method overload resolution a lambda body must
@@ -107,13 +112,17 @@ public class ClassDefinitionTest {
 
     Func<String, String> instance = new ClassRegister(createClassLoader())
         .withClassSignature(
-            TEST_CLASS_SIGNATURE.extending(new TypeToken<Func<String, String>>() {}).method(
-                methodSignature("apply").withReturnType(STRING_TYPE).withParameters(
-                    parameterSignature("value", STRING_TYPE))))
+            TEST_CLASS_SIGNATURE
+                .extending(new TypeToken<Func<String, String>>() {})
+                .method(
+                    methodSignature("apply")
+                        .withReturnType(STRING_TYPE)
+                        .withParameters(parameterSignature("value", STRING_TYPE))))
         .withImplementation(
             anyMethod().named("apply"),
             returningVariable(anyVariable().named("value")))
         .loadClass()
+        .getConstructor()
         .newInstance();
 
     String result = instance.apply("string");
@@ -122,8 +131,8 @@ public class ClassDefinitionTest {
   }
 
   @Test
-  public void defineWithInheritedMethodDeclarationBySignature()
-      throws InstantiationException, IllegalAccessException {
+  public void defineWithInheritedMethodDeclarationBySignature() throws InstantiationException,
+      IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Func<String, String> instance = new ClassRegister(createClassLoader())
         .withClassSignature(
             TEST_CLASS_SIGNATURE.extending(new TypeToken<Func<String, String>>() {}))
@@ -131,6 +140,7 @@ public class ClassDefinitionTest {
             anyMethod().named("apply").returning(String.class),
             returningLiteral(""))
         .loadClass()
+        .getConstructor()
         .newInstance();
 
     String result = instance.apply("string");
@@ -139,13 +149,14 @@ public class ClassDefinitionTest {
   }
 
   @Test
-  public void defineWithInheritedMethodDeclaration()
-      throws InstantiationException, IllegalAccessException {
+  public void defineWithInheritedMethodDeclaration() throws InstantiationException,
+      IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Func<String, String> instance = new ClassRegister(createClassLoader())
         .withClassSignature(
             TEST_CLASS_SIGNATURE.extending(new TypeToken<Func<String, String>>() {}))
         .withImplementation(anyMethod().named("apply"), returningNull())
         .loadClass()
+        .getConstructor()
         .newInstance();
 
     String result = instance.apply("string");
@@ -154,19 +165,23 @@ public class ClassDefinitionTest {
   }
 
   @Test(expected = ReflectionException.class)
-  public void defineWithAbstractMethod() throws InstantiationException, IllegalAccessException {
+  public void defineWithAbstractMethod() throws InstantiationException, IllegalAccessException,
+      InvocationTargetException, NoSuchMethodException {
     new ClassRegister(createClassLoader())
         .withClassSignature(TEST_CLASS_SIGNATURE.extending(Runnable.class))
         .loadClass()
+        .getConstructor()
         .newInstance();
   }
 
   @Test
-  public void defineWithDefaultMethod() throws InstantiationException, IllegalAccessException {
+  public void defineWithDefaultMethod() throws InstantiationException, IllegalAccessException,
+      InvocationTargetException, NoSuchMethodException {
     new ClassRegister(createClassLoader())
         .withClassSignature(TEST_CLASS_SIGNATURE.extending(Default.class))
         .withImplementation(anyConstructor(), empty())
         .loadClass()
+        .getConstructor()
         .newInstance();
   }
 

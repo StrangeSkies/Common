@@ -113,6 +113,7 @@ public class FilteringClassLoader extends ClassLoader {
 	}
 
 	@Override
+	@Deprecated
 	protected Package getPackage(String name) {
 		Package p = super.getPackage(name);
 		if (p == null || !packageFilter.test(p)) {

@@ -38,7 +38,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static uk.co.strangeskies.collection.stream.StreamUtilities.streamOptional;
 import static uk.co.strangeskies.collection.stream.StreamUtilities.tryOptional;
 import static uk.co.strangeskies.reflection.ReflectionException.REFLECTION_PROPERTIES;
 
@@ -196,8 +195,8 @@ public class OverloadResolver<I extends ExecutableToken<?, ?>> {
     return candidates
         .stream()
         .flatMap(
-            i -> streamOptional(
-                tryOptional(() -> applicabilityFunction.apply(i), e -> failures.accept(i, e))))
+            i -> tryOptional(() -> applicabilityFunction.apply(i), e -> failures.accept(i, e))
+                .stream())
         .collect(toSet());
   }
 

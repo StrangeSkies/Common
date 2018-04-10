@@ -40,7 +40,7 @@ import static uk.co.strangeskies.observable.RequestAllocator.balanced;
 import org.junit.Test;
 
 import mockit.Expectations;
-import mockit.FullVerificationsInOrder;
+import mockit.FullVerifications;
 import mockit.Injectable;
 import mockit.VerificationsInOrder;
 
@@ -57,9 +57,10 @@ public class BalancedRequestAllocatorTest {
 
   @Test
   public void allocateUnbounded() {
-    long remaining = balanced.allocateRequests(
-        Long.MAX_VALUE,
-        asList(firstObservation, secondObservation, thirdObservation));
+    long remaining = balanced
+        .allocateRequests(
+            Long.MAX_VALUE,
+            asList(firstObservation, secondObservation, thirdObservation));
 
     assertThat(remaining, equalTo(Long.MAX_VALUE));
 
@@ -106,7 +107,7 @@ public class BalancedRequestAllocatorTest {
 
     assertThat(remaining, equalTo(3l));
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         firstObservation.requestNext();
         maxTimes = 0;
@@ -116,6 +117,7 @@ public class BalancedRequestAllocatorTest {
         maxTimes = 0;
       }
     };
+    new FullVerifications() {};
   }
 
   @Test

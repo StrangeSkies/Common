@@ -39,7 +39,7 @@ import static uk.co.strangeskies.observable.RequestAllocator.sequential;
 
 import org.junit.Test;
 
-import mockit.FullVerificationsInOrder;
+import mockit.FullVerifications;
 import mockit.Injectable;
 
 @SuppressWarnings("javadoc")
@@ -55,13 +55,14 @@ public class SequentialRequestAllocatorTest {
 
   @Test
   public void allocateUnbounded() {
-    long remaining = sequential.allocateRequests(
-        Long.MAX_VALUE,
-        asList(firstObservation, secondObservation, thirdObservation));
+    long remaining = sequential
+        .allocateRequests(
+            Long.MAX_VALUE,
+            asList(firstObservation, secondObservation, thirdObservation));
 
     assertThat(remaining, equalTo(Long.MAX_VALUE));
 
-    new FullVerificationsInOrder() {
+    new FullVerifications() {
       {
         firstObservation.request(Long.MAX_VALUE);
       }
@@ -75,7 +76,7 @@ public class SequentialRequestAllocatorTest {
 
     assertThat(remaining, equalTo(0l));
 
-    new FullVerificationsInOrder() {
+    new FullVerifications() {
       {
         firstObservation.request(10l);
       }

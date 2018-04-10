@@ -32,11 +32,8 @@
  */
 package uk.co.strangeskies.expression;
 
-import java.util.Observer;
 
-import uk.co.strangeskies.expression.ActiveExpression;
-import uk.co.strangeskies.expression.Expression;
-import uk.co.strangeskies.expression.LockingExpression;
+import uk.co.strangeskies.observable.Observer;
 import uk.co.strangeskies.property.IdentityProperty;
 import uk.co.strangeskies.property.Property;
 

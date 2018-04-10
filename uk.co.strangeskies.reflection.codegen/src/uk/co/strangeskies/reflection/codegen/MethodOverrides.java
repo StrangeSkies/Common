@@ -33,7 +33,6 @@
 package uk.co.strangeskies.reflection.codegen;
 
 import static java.util.stream.Stream.concat;
-import static uk.co.strangeskies.collection.stream.StreamUtilities.streamOptional;
 import static uk.co.strangeskies.reflection.codegen.ErasedMethodSignature.erasedMethodSignature;
 
 import java.lang.reflect.AnnotatedType;
@@ -48,89 +47,92 @@ import uk.co.strangeskies.reflection.token.ExecutableToken;
 import uk.co.strangeskies.reflection.token.TypeToken;
 
 class MethodOverrides<T> {
-	private final ClassSignature<T> classSignature;
-	private final Map<Method, ExecutableToken<?, ?>> inheritedMethods;
-	private final Map<ErasedMethodSignature, MethodOverride<T>> overrides;
+  private final ClassSignature<T> classSignature;
+  private final Map<Method, ExecutableToken<?, ?>> inheritedMethods;
+  private final Map<ErasedMethodSignature, MethodOverride<T>> overrides;
 
-	public MethodOverrides(ClassSignature<T> classSignature) {
-		this.classSignature = classSignature;
-		this.inheritedMethods = new HashMap<>();
-		this.overrides = new HashMap<>();
+  public MethodOverrides(ClassSignature<T> classSignature) {
+    this.classSignature = classSignature;
+    this.inheritedMethods = new HashMap<>();
+    this.overrides = new HashMap<>();
 
-		inheritMethods();
-		overrideMethods();
-	}
+    inheritMethods();
+    overrideMethods();
+  }
 
-	private void inheritMethods() {
-		concat(inheritInterfaceMethods(), inheritClassMethods()).filter(m -> !m.isStatic()).forEach(
-				m -> {
-					inheritMethod((Method) m.getMember(), m);
-				});
-	}
+  private void inheritMethods() {
+    concat(inheritInterfaceMethods(), inheritClassMethods())
+        .filter(m -> !m.isStatic())
+        .forEach(m -> {
+          inheritMethod((Method) m.getMember(), m);
+        });
+  }
 
-	private Stream<ExecutableToken<?, ?>> inheritInterfaceMethods() {
-		return classSignature
-				.getSuperInterfaces()
-				.map(AnnotatedType::getType)
-				.map(TypeToken::forType)
-				.flatMap(TypeToken::methods);
-	}
+  private Stream<ExecutableToken<?, ?>> inheritInterfaceMethods() {
+    return classSignature
+        .getSuperInterfaces()
+        .map(AnnotatedType::getType)
+        .map(TypeToken::forType)
+        .flatMap(TypeToken::methods);
+  }
 
-	private Stream<ExecutableToken<?, ?>> inheritClassMethods() {
-		return classSignature
-				.getSuperClass()
-				.map(AnnotatedType::getType)
-				.map(TypeHierarchy::new)
-				.map(TypeHierarchy::resolveSuperClasses)
-				.orElse(Stream.of(Object.class))
-				.map(TypeToken::forType)
-				.flatMap(TypeToken::declaredMethods);
-	}
+  private Stream<ExecutableToken<?, ?>> inheritClassMethods() {
+    return classSignature
+        .getSuperClass()
+        .map(AnnotatedType::getType)
+        .map(TypeHierarchy::new)
+        .map(TypeHierarchy::resolveSuperClasses)
+        .orElse(Stream.of(Object.class))
+        .map(TypeToken::forType)
+        .flatMap(TypeToken::declaredMethods);
+  }
 
-	protected void inheritMethod(Method method, ExecutableToken<?, ?> token) {
-		if (inheritedMethods.put(method, token) == null) {
-			ErasedMethodSignature overridingSignature = erasedMethodSignature(
-					method.getName(),
-					token
-							.getParameters()
-							.map(ExecutableParameter::getTypeToken)
-							.map(TypeToken::getErasedType)
-							.toArray(Class<?>[]::new));
+  protected void inheritMethod(Method method, ExecutableToken<?, ?> token) {
+    if (inheritedMethods.put(method, token) == null) {
+      ErasedMethodSignature overridingSignature = erasedMethodSignature(
+          method.getName(),
+          token
+              .getParameters()
+              .map(ExecutableParameter::getTypeToken)
+              .map(TypeToken::getErasedType)
+              .toArray(Class<?>[]::new));
 
-			MethodOverride<T> override = overrides
-					.computeIfAbsent(overridingSignature, k -> new MethodOverride<>(this));
+      MethodOverride<T> override = overrides
+          .computeIfAbsent(overridingSignature, k -> new MethodOverride<>(this));
 
-			override.inherit(method);
+      override.inherit(method);
 
-			MethodOverride<T> mergeOverride = overrides
-					.put(erasedMethodSignature(method.getName(), method.getParameterTypes()), override);
-			if (mergeOverride != null && mergeOverride != override) {
-				for (Method mergeMethod : mergeOverride.getMethods()) {
-					override.inherit(mergeMethod);
-				}
-			}
-		}
-	}
+      MethodOverride<T> mergeOverride = overrides
+          .put(erasedMethodSignature(method.getName(), method.getParameterTypes()), override);
+      if (mergeOverride != null && mergeOverride != override) {
+        for (Method mergeMethod : mergeOverride.getMethods()) {
+          override.inherit(mergeMethod);
+        }
+      }
+    }
+  }
 
-	private void overrideMethods() {
-		classSignature.getMethods().filter(s -> !s.getModifiers().isStatic()).forEach(
-				this::overrideMethod);
+  private void overrideMethods() {
+    classSignature
+        .getMethods()
+        .filter(s -> !s.getModifiers().isStatic())
+        .forEach(this::overrideMethod);
 
-		overrides.values().stream().forEach(MethodOverride::overrideIfNecessary);
-	}
+    overrides.values().stream().forEach(MethodOverride::overrideIfNecessary);
+  }
 
-	protected ExecutableToken<?, ?> getInvocable(Method method) {
-		return inheritedMethods.get(method);
-	}
+  protected ExecutableToken<?, ?> getInvocable(Method method) {
+    return inheritedMethods.get(method);
+  }
 
-	protected void overrideMethod(MethodSignature<?> methodSignature) {
-		MethodOverride<T> override = overrides
-				.computeIfAbsent(methodSignature.erased(), k -> new MethodOverride<>(this));
+  protected void overrideMethod(MethodSignature<?> methodSignature) {
+    MethodOverride<T> override = overrides
+        .computeIfAbsent(methodSignature.erased(), k -> new MethodOverride<>(this));
 
-		override.override(methodSignature);
-	}
+    override.override(methodSignature);
+  }
 
-	public Stream<MethodSignature<?>> getSignatures() {
-		return overrides.values().stream().flatMap(d -> streamOptional(d.getOverride())).distinct();
-	}
+  public Stream<MethodSignature<?>> getSignatures() {
+    return overrides.values().stream().flatMap(d -> d.getOverride().stream()).distinct();
+  }
 }

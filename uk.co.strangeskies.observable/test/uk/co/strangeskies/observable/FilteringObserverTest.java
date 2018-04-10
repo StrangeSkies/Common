@@ -34,8 +34,9 @@ package uk.co.strangeskies.observable;
 
 import org.junit.Test;
 
-import mockit.FullVerificationsInOrder;
+import mockit.FullVerifications;
 import mockit.Injectable;
+import mockit.VerificationsInOrder;
 
 @SuppressWarnings("javadoc")
 public class FilteringObserverTest {
@@ -52,12 +53,13 @@ public class FilteringObserverTest {
     test.onObserve(upstreamObservation);
     test.onNext("message");
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         downstreamObserver.onObserve((Observation) any);
         upstreamObservation.requestNext();
       }
     };
+    new FullVerifications() {};
   }
 
   @Test
@@ -67,12 +69,13 @@ public class FilteringObserverTest {
     test.onObserve(upstreamObservation);
     test.onNext("message");
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         downstreamObserver.onObserve((Observation) any);
         downstreamObserver.onNext("message");
       }
     };
+    new FullVerifications() {};
   }
 
   @Test
@@ -85,7 +88,7 @@ public class FilteringObserverTest {
     test.onNext("three");
     test.onNext("four");
 
-    new FullVerificationsInOrder() {
+    new VerificationsInOrder() {
       {
         downstreamObserver.onObserve((Observation) any);
         upstreamObservation.requestNext();
@@ -94,6 +97,7 @@ public class FilteringObserverTest {
         upstreamObservation.requestNext();
       }
     };
+    new FullVerifications() {};
   }
 
   @Test(expected = NullPointerException.class)
